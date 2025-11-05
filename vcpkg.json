@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "wor-bootio",
+  "dependencies": [
+    "libusb"
+  ],
+  "builtin-baseline": "dfee76170f5647b62e071bf03eed25104713d7b1"
+}
