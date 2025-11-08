@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdint.h>
-
 #include "dfu_func_dt.h"
+
+#include <stdint.h>
 
 /**
  * \brief
@@ -51,11 +51,11 @@ struct Configuration {
     /**
      * \brief Alternative interface name.
      */
-    char alt_name[127];
+    char alt_name[128];
     /**
      * \brief Serial name.
      */
-    char serial_name[127];
+    char serial_name[128];
     /**
      * \brief Device descriptor handle.
      */
@@ -63,7 +63,7 @@ struct Configuration {
     /**
      * \brief Device handle.
      */
-    struct libusb_device_handle *handle;
+    struct libusb_device_handle *device_handle;
 };
 
 /**

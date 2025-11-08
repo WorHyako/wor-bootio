@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "configuration.h"
+
 /**
  * \brief
  */
@@ -79,3 +81,5 @@ struct File {
  */
 [[nodiscard, deprecated, maybe_unused]]
 struct File load_file(const char *path, int *ec);
+
+void upload_to_file(const char *file_path, struct Configuration *config, int total_size, int chunk_size);

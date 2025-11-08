@@ -1,8 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <libusb.h>
 
+#include "load.h"
 #include "configuration.h"
 #include "dfu_file.h"
 
@@ -32,10 +35,11 @@ static void print_devices(struct ConfigurationNode *device_node_root) {
 
 int main() {
     libusb_context *ctx;
-    const int init_res = libusb_init(&ctx);
+    struct ConfigurationNode *confs = nullptr;
+    int ec = libusb_init(&ctx);
 
-    if (init_res) {
-        const char *error = libusb_error_name(init_res);
+    if (ec) {
+        const char *error = libusb_error_name(ec);
         printf("Error initializing libusb: %s\n", error);
         exit(1);
     }
@@ -46,16 +50,26 @@ int main() {
 
     for (int i = 0; i < device_num; ++i) {
         libusb_device *dev = device_list[i];
-        struct ConfigurationNode *confs = find_configurations(dev);
+        confs = find_configurations(dev);
         if (confs == nullptr) {
             continue;
         }
+        if (confs->device.vendor_id == 0x0483 && confs->device.product_id == 0xdf11) {
+            break;
+        }
         print_devices(confs);
-        free_device_tree(confs);
     }
-    libusb_free_device_list(device_list, 1);
-    // int ec;
-    // auto file = load_file("", &ec);
+    ec = libusb_open(confs->device.device, &confs->device.device_handle);
+    if (ec != LIBUSB_SUCCESS) {
+        printf("Error to open device");
+        return 1;
+    }
+
+    const int fd = open("test.bin", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    uint8_t buf[1024];
+    ec = upload_dfu(&confs->device, buf, 1024, 1024);
+    free_device_tree(confs);
+    libusb_close(confs->device.device_handle);
     libusb_exit(ctx);
     return 0;
 }

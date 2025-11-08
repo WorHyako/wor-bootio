@@ -124,8 +124,8 @@ dfu_found:
                 continue;
             }
             for (int alt_idx = 0; alt_idx < intf->num_altsetting; ++alt_idx) {
-                unsigned char alt_name[UINT_FAST8_MAX];
-                unsigned char serial_name[UINT_FAST8_MAX];
+                unsigned char alt_name[128];
+                unsigned char serial_name[128];
                 const struct libusb_interface_descriptor *alt = &intf->altsetting[alt_idx];
 
                 if (alt->bInterfaceClass != 0xfe || alt->bInterfaceSubClass != 1) {
@@ -144,7 +144,7 @@ dfu_found:
                 ec = libusb_get_string_descriptor_ascii(dev_handle,
                                                         alt->iInterface,
                                                         alt_name,
-                                                        127);
+                                                        126);
                 if (alt->iInterface == 0 || ec == 0) {
                     strcpy((char *)alt_name, "unknown");
                 } else {
@@ -153,7 +153,7 @@ dfu_found:
                 ec = libusb_get_string_descriptor_ascii(dev_handle,
                                                         desc.iSerialNumber,
                                                         serial_name,
-                                                        127);
+                                                        126);
                 if (desc.iSerialNumber == 0 || ec == 0) {
                     strcpy((char *)serial_name, "unknown");
                 } else {
@@ -189,7 +189,7 @@ dfu_found:
                 conf->dev_number = libusb_get_device_address(dev);
                 conf->bus_number = libusb_get_bus_number(dev);
                 conf->func_dt = func_dt;
-                conf->handle = nullptr;
+                conf->device_handle = dev_handle;
                 conf->max_packet_size = desc.bMaxPacketSize0;
             }
         }
