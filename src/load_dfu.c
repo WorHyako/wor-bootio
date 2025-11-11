@@ -12,14 +12,14 @@
 int upload_dfu(const struct Configuration *config,
                const uint8_t *buffer,
                const size_t expected_size,
-               size_t chunk_size) {
+               size_t chunk_size,
+               uint32_t transfer_count) {
     if (buffer == nullptr) {
         return LIBUSB_ERROR_OVERFLOW;
     }
     size_t total_bytes = 0;
     uint8_t *buf_temp = calloc(expected_size, sizeof(uint8_t));
     int ec = 0;
-    int transfer_count = 0;
 
     while (true) {
         if (expected_size - total_bytes < chunk_size) {
@@ -42,7 +42,7 @@ int upload_dfu(const struct Configuration *config,
         }
     }
     free(buf_temp);
-    return ec < 0 ? (int)total_bytes : ec;
+    return ec < 0 ? ec : (int)total_bytes;
 }
 
 int download_dfu(const struct Configuration *config,
@@ -79,12 +79,12 @@ int download_dfu(const struct Configuration *config,
             if (ec < 0) {
                 break;
             }
-            if (status.state == STATE_APP_IDLE || status.state == STATE_DFU_ERROR) {
+            if (status.state == DfuState_AppIdle || status.state == DfuState_Error) {
                 break;
             }
             sleep(status.timeout);
         }
-        if (status.status != DFU_STATUS_OK) {
+        if (status.status != DfuStatus_Ok) {
             ec = LIBUSB_ERROR_IO;
             break;
         }
@@ -109,12 +109,12 @@ int download_dfu(const struct Configuration *config,
             break;
         }
         switch (status.state) {
-        case STATE_DFU_IDLE:
+        case DfuState_Idle:
             break;
-        case STATE_DFU_MANIFEST_SYNC:
-        case STATE_DFU_MANIFEST:
+        case DfuState_ManifestSync:
+        case DfuState_Manifest:
             continue;
-        case STATE_DFU_MANIFEST_WAIT_RESET:
+        case DfuState_ManifestWaitReset:
             ec = libusb_reset_device(config->device_handle);
             if (ec < 0) {
                 printf("Error in libusb_reset_device: %s", libusb_error_name(ec));

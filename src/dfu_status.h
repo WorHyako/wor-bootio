@@ -2,47 +2,43 @@
 
 #include <stdint.h>
 
-enum DfuCommand : uint8_t {
-    COMMAND_DFU_DETACH = 0x00,
-    COMMAND_DFU_DNLOAD = 0x01,
-    COMMAND_DFU_UPLOAD = 0x02,
-    COMMAND_DFU_GETSTATUS = 0x03,
-    COMMAND_DFU_CLRSTATUS = 0x04,
-    COMMAND_DFU_GETSTATE = 0x05,
-    COMMAND_DFU_ABORT = 0x06,
-};
-
+/**
+ * \brief
+ */
 enum DfuState : uint8_t {
-    STATE_APP_IDLE = 0x00,
-    STATE_APP_DETACH = 0x01,
-    STATE_DFU_IDLE = 0x02,
-    STATE_DFU_DOWNLOAD_SYNC = 0x03,
-    STATE_DFU_DOWNLOAD_BUSY = 0x04,
-    STATE_DFU_DOWNLOAD_IDLE = 0x05,
-    STATE_DFU_MANIFEST_SYNC = 0x06,
-    STATE_DFU_MANIFEST = 0x07,
-    STATE_DFU_MANIFEST_WAIT_RESET = 0x08,
-    STATE_DFU_UPLOAD_IDLE = 0x09,
-    STATE_DFU_ERROR = 0x0a
+    DfuState_AppIdle = 0x00,
+    DfuState_AppDetach = 0x01,
+    DfuState_Idle = 0x02,
+    DfuState_DownloadSync = 0x03,
+    DfuState_DownloadBusy = 0x04,
+    DfuState_DownloadIdle = 0x05,
+    DfuState_ManifestSync = 0x06,
+    DfuState_Manifest = 0x07,
+    DfuState_ManifestWaitReset = 0x08,
+    DfuState_UploadIdle = 0x09,
+    DfuState_Error = 0x0a
 };
 
+/**
+ * \brief
+ */
 enum DfuStatus : uint8_t {
-    DFU_STATUS_OK = 0x0,
-    DFU_STATUS_ERROR_TARGET = 0x01,
-    DFU_STATUS_ERROR_FILE = 0x02,
-    DFU_STATUS_ERROR_WRITE = 0x03,
-    DFU_STATUS_ERROR_ERASE = 0x04,
-    DFU_STATUS_ERROR_CHECK_ERASED = 0x05,
-    DFU_STATUS_ERROR_PROG = 0x06,
-    DFU_STATUS_ERROR_VERIFY = 0x07,
-    DFU_STATUS_ERROR_ADDRESS = 0x08,
-    DFU_STATUS_ERROR_NOTDONE = 0x09,
-    DFU_STATUS_ERROR_FIRMWARE = 0x0a,
-    DFU_STATUS_ERROR_VENDOR = 0x0b,
-    DFU_STATUS_ERROR_USBR = 0x0c,
-    DFU_STATUS_ERROR_POR = 0x0d,
-    DFU_STATUS_ERROR_UNKNOWN = 0x0e,
-    DFU_STATUS_ERROR_STALLEDPKT = 0x0f
+    DfuStatus_Ok = 0x0,
+    DfuStatus_ErrorTarget = 0x01,
+    DfuStatus_ErrorFile = 0x02,
+    DfuStatus_ErrorWrite = 0x03,
+    DfuStatus_ErrorErase = 0x04,
+    DfuStatus_ErrorCheckErase = 0x05,
+    DfuStatus_ErrorProg = 0x06,
+    DfuStatus_ErrorVerify = 0x07,
+    DfuStatus_ErrorAddress = 0x08,
+    DfuStatus_ErrorNotDone = 0x09,
+    DfuStatus_ErrorFirmware = 0x0a,
+    DfuStatus_ErrorVendor = 0x0b,
+    DfuStatus_ErrorUsbR = 0x0c,
+    DfuStatus_ErrorPor = 0x0d,
+    DfuStatus_ErrorUnknown = 0x0e,
+    DfuStatus_ErrorStalledPkt = 0x0f
 };
 
 #pragma pack(push, 1)

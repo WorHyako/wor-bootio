@@ -11,6 +11,7 @@
  * \param buffer
  * \param expected_size
  * \param chunk_size
+ * \param transfer_count
  *
  * \return
  */
@@ -18,7 +19,8 @@
 int upload_dfu(const struct Configuration *config,
                const uint8_t *buffer,
                size_t expected_size,
-               size_t chunk_size);
+               size_t chunk_size,
+               uint32_t transfer_count);
 
 /**
  * \brief
@@ -41,6 +43,7 @@ int download_dfu(const struct Configuration *config,
  *
  * \param config
  * \param buffer
+ * \param start_address
  * \param expected_size
  * \param chunk_size
  *
@@ -49,6 +52,7 @@ int download_dfu(const struct Configuration *config,
 [[nodiscard]]
 int upload_dfuse(const struct Configuration *config,
                  const uint8_t *buffer,
+                 size_t start_address,
                  uint16_t expected_size,
                  uint16_t chunk_size);
 

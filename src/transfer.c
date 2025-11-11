@@ -19,7 +19,7 @@ int transfer_in(const struct Configuration *config,
     return libusb_control_transfer(config->device_handle,
                                    LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS |
                                    LIBUSB_RECIPIENT_INTERFACE,
-                                   COMMAND_DFU_UPLOAD,
+                                   DfuCommand_Upload,
                                    transfer_count,
                                    config->interface,
                                    buf,
@@ -33,10 +33,10 @@ int transfer_out(const struct Configuration *config,
                  const uint16_t transfer_count) {
     return libusb_control_transfer(config->device_handle,
                                    LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE,
-                                   COMMAND_DFU_DNLOAD,
+                                   DfuCommand_Download,
                                    transfer_count,
                                    config->interface,
-                                   (uint8_t*)buf,
+                                   (uint8_t *)buf,
                                    chunk_size,
                                    timeout);
 }
@@ -44,7 +44,7 @@ int transfer_out(const struct Configuration *config,
 int get_status(const struct Configuration *config, struct DeviceDfuStatus *status) {
     const int ec = libusb_control_transfer(config->device_handle,
                                            LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE,
-                                           COMMAND_DFU_GETSTATUS,
+                                           DfuCommand_GetStatus,
                                            0,
                                            config->interface,
                                            (uint8_t *)status,
@@ -57,6 +57,28 @@ int get_status(const struct Configuration *config, struct DeviceDfuStatus *statu
         return LIBUSB_ERROR_OTHER;
     }
     return LIBUSB_SUCCESS;
+}
+
+int dfu_abort(const struct Configuration *config) {
+    return libusb_control_transfer(config->device_handle,
+                                   LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE,
+                                   DfuCommand_Abort,
+                                   0,
+                                   config->interface,
+                                   nullptr,
+                                   0,
+                                   timeout);
+}
+
+int dfu_detach(const struct Configuration *config, const uint8_t detach_timeout) {
+    return libusb_control_transfer(config->device_handle,
+                                   LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE,
+                                   DfuCommand_Detach,
+                                   detach_timeout,
+                                   config->interface,
+                                   nullptr,
+                                   0,
+                                   timeout);
 }
 
 void set_device_timeout(const uint32_t new_timeout) {

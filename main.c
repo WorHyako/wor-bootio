@@ -8,6 +8,9 @@
 #include "load.h"
 #include "configuration.h"
 #include "dfu_file.h"
+#include "dfuse_command.h"
+#include "load.h"
+#include "transfer.h"
 
 /**
  * \brief
@@ -65,9 +68,12 @@ int main() {
         return 1;
     }
 
-    const int fd = open("test.bin", O_WRONLY | O_CREAT | O_TRUNC, 0666);
     uint8_t buf[1024];
-    ec = upload_dfu(&confs->device, buf, 1024, 1024);
+    ec = upload_dfuse(&confs->device, buf, 0x08001000, 1024, 1024);
+
+    ec = dfu_detach(&confs->device, 100);
+    ec = libusb_reset_device(confs->device.device_handle);
+    const int fd = open("test.bin", O_WRONLY | O_CREAT | O_TRUNC, 0666);
     free_device_tree(confs);
     libusb_close(confs->device.device_handle);
     libusb_exit(ctx);

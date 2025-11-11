@@ -42,6 +42,8 @@ target_sources(wor-bootio_example
         src/load_dfu.c
         src/load_dfuse.c
         src/crc32.c
+        src/memory_segment.c
+        src/dfuse_command.c
         main.c)
 
 target_link_libraries(wor-bootio_example
