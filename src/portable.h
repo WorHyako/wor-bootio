@@ -10,7 +10,7 @@
 
 #define wor_bootio_nodiscard__ [[nodiscard]]
 #define wor_bootio_constexpr__ constexpr
-#define wor_bootio_nullptr__ NULL
+#define wor_bootio_nullptr__ nullptr
 
 #elif
 static_assert(false, "Only MSVC (C17) and LLVM Clang (C17/C23) compilers are supported.")
