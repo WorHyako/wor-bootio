@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.h"
+#include "dfu_file.h"
 
 #include <stddef.h>
 
@@ -11,7 +12,6 @@
  * \param buffer
  * \param expected_size
  * \param chunk_size
- * \param transfer_count
  *
  * \return
  */
@@ -19,8 +19,7 @@
 int upload_dfu(const struct Configuration *config,
                const uint8_t *buffer,
                size_t expected_size,
-               size_t chunk_size,
-               uint32_t transfer_count);
+               size_t chunk_size);
 
 /**
  * \brief
@@ -53,21 +52,21 @@ int download_dfu(const struct Configuration *config,
 int upload_dfuse(const struct Configuration *config,
                  const uint8_t *buffer,
                  size_t start_address,
-                 uint16_t expected_size,
+                 size_t expected_size,
                  uint16_t chunk_size);
 
 /**
  * \brief
  *
  * \param config
- * \param buffer
- * \param expected_size
+ * \param file
+ * \param start_address
  * \param chunk_size
  *
  * \return
  */
 [[nodiscard]]
 int download_dfuse(const struct Configuration *config,
-                   uint8_t *buffer,
-                   uint16_t expected_size,
+                   struct DfuFile *file,
+                   size_t start_address,
                    uint16_t chunk_size);

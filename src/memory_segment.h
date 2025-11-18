@@ -97,3 +97,13 @@ void free_memory_segment_list(struct MemorySegmentNode *segment_list);
  */
 [[nodiscard]]
 struct MemorySegment* find_segment(struct MemorySegmentNode *segment_list, uint32_t address);
+
+/**
+ * \brief
+ *
+ * \param segment_list
+ * \param address
+ * \return
+ */
+[[nodiscard]]
+struct MemorySegmentNode* find_segment_node(struct MemorySegmentNode *segment_list, uint32_t address);

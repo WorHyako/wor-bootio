@@ -29,7 +29,7 @@ enum {
  * \return
  */
 [[nodiscard]]
-static int parse_suffix(struct File *file) {
+static int parse_suffix(struct DfuFile *file) {
     if (file == nullptr) {
         return -1;
     }
@@ -68,8 +68,8 @@ static int parse_suffix(struct File *file) {
     return 0;
 }
 
-struct File load_file(const char *path, int *ec) {
-    struct File file = {
+struct DfuFile load_file(const char *path, int *ec) {
+    struct DfuFile file = {
         .name = "\0",
         .data = nullptr,
         .dfu_suffix.id_vendor = 0xffff,
@@ -120,17 +120,47 @@ struct File load_file(const char *path, int *ec) {
     return file;
 }
 
-void upload_to_file(const char *file_path, struct Configuration *config, int total_size, int chunk_size) {
-    if (file_path == nullptr || config == nullptr) {
+int dfu_file_write(struct DfuFile *file) {
+    if (file == nullptr || file->data == nullptr) {
+        return -1;
+    }
+    int ec;
+    constexpr char mode[] = "wb";
+    FILE *out = fopen(file->name, mode);
+    if (out == nullptr) {
+        ec = remove(file->name);
+        if (ec != 0) {
+            return -1;
+        }
+        out = fopen(file->name, mode);
+        if (out == nullptr) {
+            return -1;
+        }
+    }
+    ec = (int)fwrite(file->data, sizeof(*file->data), file->size.total, out);
+    return ec;
+}
+
+void dfu_file_free(struct DfuFile *file) {
+    if (file == nullptr) {
         return;
     }
-    const int fd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC);
-    if (fd < 0) {
-        perror("open");
+    free(file->data);
+    free((char *)file->name);
+}
+
+void dfu_file_fill(struct DfuFile *file, uint8_t *data, size_t size) {
+    if (file == nullptr || data == nullptr || size == 0) {
         return;
     }
+    file->data = calloc(size, sizeof(*file->data));
+    memcpy(file->data, data, size);
+    file->size.total = size;
+}
 
-    // do_upload(fd, config, total_size, chunk_size);
-
-    close(fd);
+void dfu_file_set_name(struct DfuFile *file, const char *name) {
+    if (file == nullptr || name == nullptr) {
+        return;
+    }
+    file->name = strdup(name);
 }

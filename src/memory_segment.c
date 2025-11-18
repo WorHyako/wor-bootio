@@ -99,3 +99,14 @@ struct MemorySegment *find_segment(struct MemorySegmentNode *segment_list, const
     }
     return nullptr;
 }
+
+struct MemorySegmentNode *find_segment_node(struct MemorySegmentNode *segment_list, const uint32_t address) {
+    while (segment_list->next != nullptr) {
+        if (address >= segment_list->memory_segment.distance.start
+            && address <= segment_list->memory_segment.distance.end) {
+            return segment_list;
+        }
+        segment_list = segment_list->next;
+    }
+    return nullptr;
+}

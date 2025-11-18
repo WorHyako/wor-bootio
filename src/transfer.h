@@ -70,6 +70,17 @@ int dfu_abort(const struct Configuration *config);
  * \brief
  *
  * \param config
+ * \param times
+ * \param ...
+ * \return
+ */
+[[nodiscard, maybe_unused, deprecated]]
+int wait_for_state(const struct Configuration *config, uint8_t times, ...);
+
+/**
+ * \brief
+ *
+ * \param config
  * \param detach_timeout
  * \return
  */

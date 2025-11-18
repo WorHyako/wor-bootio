@@ -14,7 +14,11 @@ enum DfuSeCommand : uint8_t {
     /**
      * \brief
      */
-    DfuSeCommand_SetAddress = 0x21
+    DfuSeCommand_SetAddress = 0x21,
+    /**
+     * \brief
+     */
+    DfuSeCommand_ErasePage = 0x41
 };
 
 /**
@@ -69,7 +73,7 @@ static int send_command(const uint8_t *command, const uint8_t length, const stru
     return ec;
 }
 
-int dfuse_set_address(const struct Configuration *config, const uint32_t address) {
+int dfuse_cmd_set_address(const struct Configuration *config, const uint32_t address) {
     uint8_t command[5];
     command[0] = DfuSeCommand_SetAddress;
     command[1] = address & 0xff;
@@ -77,4 +81,24 @@ int dfuse_set_address(const struct Configuration *config, const uint32_t address
     command[3] = (address >> 16) & 0xff;
     command[4] = (address >> 24) & 0xff;
     return send_command(command, 5, config);
+}
+
+int dfuse_cmd_erase_page(const struct Configuration *config, const uint32_t address) {
+    uint8_t command[5];
+    command[0] = DfuSeCommand_ErasePage;
+    command[1] = address & 0xff;
+    command[2] = (address >> 8) & 0xff;
+    command[3] = (address >> 16) & 0xff;
+    command[4] = (address >> 24) & 0xff;
+    return send_command(command, 5, config);
+}
+
+int dfuse_cmd_mass_erase(const struct Configuration *config) {
+    constexpr uint8_t command[] = {0x41};
+    return send_command(command, 1, config);
+}
+
+int dfuse_cmd_leave(const struct Configuration *config) {
+    constexpr uint8_t command[] = {0x91};
+    return send_command(command, 1, config);
 }

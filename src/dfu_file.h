@@ -8,22 +8,28 @@
 /**
  * \brief
  */
-struct File {
+struct DfuFile {
     /**
-     * \brief Local file path
+     * \brief Local file path.
      */
     const char *name;
+
     /**
-     * \brief Firmware data
+     * \brief Path
+     */
+    const char* path;
+
+    /**
+     * \brief Firmware data.
      */
     uint8_t *data;
 
     /**
-     * \brief File offsets
+     * \brief File offsets.
      */
     struct {
         /**
-         * \brief Total size
+         * \brief Total size.
          */
         size_t total;
         /**
@@ -31,21 +37,21 @@ struct File {
          */
         size_t prefix;
         /**
-         * \brief DFU suffix offset
+         * \brief DFU suffix offset.
          */
         size_t suffix;
     } size;
 
     /**
-     * \brief DFU suffix struct
+     * \brief DFU suffix struct.
      */
     struct {
         /**
-         * \brief Vendor ID
+         * \brief Vendor ID.
          */
         uint16_t id_vendor;
         /**
-         * \brief Product ID
+         * \brief Product ID.
          */
         uint16_t id_product;
         /**
@@ -53,19 +59,19 @@ struct File {
          */
         uint16_t bcd_device;
         /**
-         * \brief DFU version
+         * \brief DFU version.
          */
         uint8_t bcd_dfu;
         /**
-         * \brief DFU signature. Must be "UFD" (0x55 0x46 0x44)
+         * \brief DFU signature. Must be "UFD" (0x55 0x46 0x44).
          */
         uint8_t ucd_dfu_signature[3];
         /**
-         * \brief DFU suffix length
+         * \brief DFU suffix length.
          */
         uint8_t length;
         /**
-         * \brief Word CRC32
+         * \brief Word CRC32.
          */
         uint32_t crc;
     } dfu_suffix;
@@ -80,6 +86,13 @@ struct File {
  * \return
  */
 [[nodiscard, deprecated, maybe_unused]]
-struct File load_file(const char *path, int *ec);
+struct DfuFile load_file(const char *path, int *ec);
 
-void upload_to_file(const char *file_path, struct Configuration *config, int total_size, int chunk_size);
+[[nodiscard]]
+int dfu_file_write(struct DfuFile* file);
+
+void dfu_file_free(struct DfuFile* file);
+
+void dfu_file_fill(struct DfuFile* file, uint8_t* data, size_t size);
+
+void dfu_file_set_name(struct DfuFile* file, const char* name);

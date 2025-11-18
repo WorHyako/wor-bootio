@@ -1,6 +1,8 @@
 #include "transfer.h"
 
 #include <libusb.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 /**
  * \brief
@@ -68,6 +70,53 @@ int dfu_abort(const struct Configuration *config) {
                                    nullptr,
                                    0,
                                    timeout);
+}
+
+int wait_for_state(const struct Configuration *config, const uint8_t times, ...) {
+    struct DeviceDfuStatus status;
+
+    uint8_t waitable_states[6];
+    va_list args = nullptr;
+    va_start(args);
+
+    int count = va_arg(args, int);
+    count = count > 6
+                ? 6
+                : count;
+
+    for (int i = 0; i < count; ++i) {
+        waitable_states[i] = (uint8_t)va_arg(args, int);
+    }
+    va_end(args);
+
+    for (int i = 0; i < times; i++) {
+        int ec = get_status(config, &status);
+        if (ec == LIBUSB_ERROR_PIPE) {
+            continue;
+        }
+        if (status.state != DfuState_ManifestWaitReset) {
+            ec = libusb_reset_device(config->device_handle);
+            return ec < 0 && ec != LIBUSB_ERROR_NOT_FOUND
+                       ? ec
+                       : 0;
+        }
+        if (ec < 0) {
+            return ec;
+        }
+        if (status.state == DfuState_Error) {
+            break;
+        }
+        for (int state_idx = 0; state_idx < count; ++state_idx) {
+            if (status.state == waitable_states[state_idx]) {
+                break;
+            }
+        }
+        sleep(status.timeout);
+    }
+    if (status.status != DfuStatus_Ok) {
+        return LIBUSB_ERROR_PIPE;
+    }
+    return 0;
 }
 
 int dfu_detach(const struct Configuration *config, const uint8_t detach_timeout) {

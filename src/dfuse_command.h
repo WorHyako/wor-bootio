@@ -12,4 +12,32 @@
  * \return
  */
 [[nodiscard]]
-int dfuse_set_address(const struct Configuration *config, uint32_t address);
+int dfuse_cmd_set_address(const struct Configuration *config, uint32_t address);
+
+/**
+ * \brief
+ *
+ * \param config
+ * \return
+ */
+[[nodiscard]]
+int dfuse_cmd_erase_page(const struct Configuration *config, uint32_t address);
+
+/**
+ * \brief
+ *
+ * \param config
+ * \return
+ */
+[[nodiscard]]
+int dfuse_cmd_mass_erase(const struct Configuration *config);
+
+/**
+ * \brief
+ *
+ * \param config
+ * \return
+ */
+[[nodiscard]]
+int dfuse_cmd_leave(const struct Configuration *config);
+

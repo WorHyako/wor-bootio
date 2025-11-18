@@ -4,6 +4,20 @@
 
 /**
  * \brief
+ */
+enum DfuFuncDtAttributes : uint8_t {
+    /**
+     * \brief
+     */
+    DfuFuncDtAttributes_ManifestTolerant = 0b100,
+    /**
+     * \brief
+     */
+    DfuFuncDtAttributes_Detach = 0b1'000
+};
+
+/**
+ * \brief
  *
  * See https://docs.kernel.org/usb/functionfs-desc.html.
  */

@@ -37,6 +37,8 @@ static void print_devices(struct ConfigurationNode *device_node_root) {
 }
 
 int main() {
+
+
     libusb_context *ctx;
     struct ConfigurationNode *confs = nullptr;
     int ec = libusb_init(&ctx);
@@ -68,12 +70,26 @@ int main() {
         return 1;
     }
 
-    uint8_t buf[1024];
-    ec = upload_dfuse(&confs->device, buf, 0x08001000, 1024, 1024);
+    uint8_t buf[150'000];
+    const int bytes_count = upload_dfuse(&confs->device, buf, 0x08001000, 150'000, 1024);
+    if (bytes_count < 0) {
+        ec = bytes_count;
+        return -1;
+    }
+    struct DfuFile file;
 
-    ec = dfu_detach(&confs->device, 100);
-    ec = libusb_reset_device(confs->device.device_handle);
-    const int fd = open("test.bin", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    dfu_file_set_name(&file, "test.bin");
+    dfu_file_fill(&file, buf, bytes_count);
+    ec = dfu_file_write(&file);
+    if (ec < 0) {
+        printf("Error to write file.\n");
+    }
+
+    ec = download_dfuse(&confs->device, &file, 0x8'001'000, 1024);
+
+    dfu_file_free(&file);
+    // ec = dfu_detach(&confs->device, 100);
+    // ec = libusb_reset_device(confs->device.device_handle);
     free_device_tree(confs);
     libusb_close(confs->device.device_handle);
     libusb_exit(ctx);
