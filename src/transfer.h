@@ -3,10 +3,16 @@
 #include "configuration.h"
 #include "dfu_status.h"
 
+#include "portable.h"
+
 /**
  * \brief
  */
-enum DfuCommand : uint8_t {
+enum DfuCommand
+#if __STDC_VERSION__ == 202311L
+        : uint8_t
+#endif
+    {
     DfuCommand_Detach = 0x00,
     DfuCommand_Download = 0x01,
     DfuCommand_Upload = 0x02,
@@ -26,7 +32,7 @@ enum DfuCommand : uint8_t {
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int transfer_in(const struct Configuration *config,
                 uint8_t *buf,
                 uint16_t chunk_size,
@@ -41,7 +47,7 @@ int transfer_in(const struct Configuration *config,
  * \param transfer_count
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int transfer_out(const struct Configuration *config,
                  const uint8_t *buf,
                  uint16_t chunk_size,
@@ -54,7 +60,7 @@ int transfer_out(const struct Configuration *config,
  * \param status
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int get_status(const struct Configuration *config, struct DeviceDfuStatus *status);
 
 /**
@@ -63,19 +69,8 @@ int get_status(const struct Configuration *config, struct DeviceDfuStatus *statu
  * \param config
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int dfu_abort(const struct Configuration *config);
-
-/**
- * \brief
- *
- * \param config
- * \param times
- * \param ...
- * \return
- */
-[[nodiscard, maybe_unused, deprecated]]
-int wait_for_state(const struct Configuration *config, uint8_t times, ...);
 
 /**
  * \brief
@@ -84,7 +79,7 @@ int wait_for_state(const struct Configuration *config, uint8_t times, ...);
  * \param detach_timeout
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int dfu_detach(const struct Configuration *config, uint8_t detach_timeout);
 
 /**

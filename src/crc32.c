@@ -1,12 +1,14 @@
 #include "crc32.h"
 
+#include "portable.h"
+
 /**
  * "Copyright (C) 1986 Gary S. Brown. You may use this program, or code or
  * tables extracted from it, as desired without restriction."
  *
  * \brief
  */
-static constexpr uint32_t crc32_table[] = {
+static wor_bootio_constexpr__ uint32_t crc32_table[] = {
     0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
     0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
     0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91, 0x1db71064, 0x6ab020f2,
@@ -59,7 +61,7 @@ static constexpr uint32_t crc32_table[] = {
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 static uint32_t crc32_byte(const uint32_t accum, const uint8_t delta) {
     return crc32_table[(accum ^ delta) & 0xff] ^ (accum >> 8);
 }

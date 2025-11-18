@@ -5,7 +5,11 @@
 /**
  * \brief
  */
-enum DfuState : uint8_t {
+enum DfuState
+#if __STDC_VERSION__ == 202311L
+        : uint8_t
+#endif
+    {
     DfuState_AppIdle = 0x00,
     DfuState_AppDetach = 0x01,
     DfuState_Idle = 0x02,
@@ -22,7 +26,11 @@ enum DfuState : uint8_t {
 /**
  * \brief
  */
-enum DfuStatus : uint8_t {
+enum DfuStatus
+#if __STDC_VERSION__ == 202311L
+        : uint8_t
+#endif
+    {
     DfuStatus_Ok = 0x0,
     DfuStatus_ErrorTarget = 0x01,
     DfuStatus_ErrorFile = 0x02,

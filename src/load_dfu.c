@@ -1,16 +1,20 @@
 #include "load.h"
 
 #include "transfer.h"
+#include "portable.h"
 
 #include <libusb.h>
 
 #include <stdlib.h>
-#include <unistd.h>
 
 /**
  * \brief
- */
+*/
+#if __STDC_VERSION__ == 202311L
 constexpr uint16_t max_wait_count = 10;
+#else
+#define max_wait_count 10
+#endif
 
 /**
  * \brief
@@ -18,7 +22,7 @@ constexpr uint16_t max_wait_count = 10;
  * \param config
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 static int wait_for_download_idle(const struct Configuration *config) {
     int ec;
     struct DeviceDfuStatus status;
@@ -32,7 +36,7 @@ static int wait_for_download_idle(const struct Configuration *config) {
             ec = -1;
             break;
         }
-        sleep(status.timeout);
+        wor_bootio_sleep_ms(status.timeout);
     } while (++i < max_wait_count || status.state != DfuState_DownloadIdle);
     return ec > -1 && status.status == DfuStatus_Ok
                ? -1
@@ -45,7 +49,7 @@ static int wait_for_download_idle(const struct Configuration *config) {
  * \param config
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 static int wait_for_dfu_idle(const struct Configuration *config) {
     int ec;
     struct DeviceDfuStatus status;
@@ -74,7 +78,7 @@ static int wait_for_dfu_idle(const struct Configuration *config) {
         default:
             break;
         }
-        sleep(status.timeout);
+        wor_bootio_sleep_ms(status.timeout);
     } while (++i < max_wait_count || status.state != DfuState_Idle);
     return ec;
 }
@@ -83,7 +87,7 @@ int upload_dfu(const struct Configuration *config,
                const uint8_t *buffer,
                const size_t expected_size,
                size_t chunk_size) {
-    if (buffer == nullptr) {
+    if (buffer == wor_bootio_nullptr__) {
         return LIBUSB_ERROR_OVERFLOW;
     }
     size_t total_bytes = 0;
@@ -124,7 +128,7 @@ int download_dfu(const struct Configuration *config,
                  uint8_t *buffer,
                  const size_t expected_size,
                  size_t chunk_size) {
-    if (buffer == nullptr || config == nullptr) {
+    if (buffer == wor_bootio_nullptr__ || config == wor_bootio_nullptr__) {
         return LIBUSB_ERROR_OVERFLOW;
     }
     size_t total_bytes = 0;
@@ -159,7 +163,7 @@ int download_dfu(const struct Configuration *config,
         return ec;
     }
 
-    constexpr uint8_t terminating_byte = 0x00;
+    wor_bootio_constexpr__ uint8_t terminating_byte = 0x00;
     ec = transfer_out(config, &terminating_byte, 0, transfer_count);
     if (ec < 0) {
         return ec;

@@ -4,11 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "portable.h"
+
 int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **segment_list) {
     struct MemorySegmentNode *segment_list_head = *segment_list;
     int scanf_idx;
     int ec;
-    char *name = nullptr;
+    char *name = wor_bootio_nullptr__;
     uint32_t page_size;
     uint32_t address_start;
     uint32_t page_count;
@@ -57,9 +59,9 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
             segment->distance.end = address_start + page_count * page_size;
             segment->page_size = page_size;
             segment->type = segment_type & 0b111;
-            segment_node->next = nullptr;
+            segment_node->next = wor_bootio_nullptr__;
 
-            if (segment_list_head == nullptr) {
+            if (segment_list_head == wor_bootio_nullptr__) {
                 *segment_list = segment_node;
                 segment_list_head = *segment_list;
             } else {
@@ -81,32 +83,32 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
 }
 
 void free_memory_segment_list(struct MemorySegmentNode *segment_list) {
-    while (segment_list != nullptr) {
+    while (segment_list != wor_bootio_nullptr__) {
         struct MemorySegmentNode *next = segment_list->next;
         free(segment_list);
-        segment_list = nullptr;
+        segment_list = wor_bootio_nullptr__;
         segment_list = next;
     }
 }
 
 struct MemorySegment *find_segment(struct MemorySegmentNode *segment_list, const uint32_t address) {
-    while (segment_list->next != nullptr) {
+    while (segment_list->next != wor_bootio_nullptr__) {
         if (address >= segment_list->memory_segment.distance.start
             && address <= segment_list->memory_segment.distance.end) {
             return &segment_list->memory_segment;
         }
         segment_list = segment_list->next;
     }
-    return nullptr;
+    return wor_bootio_nullptr__;
 }
 
 struct MemorySegmentNode *find_segment_node(struct MemorySegmentNode *segment_list, const uint32_t address) {
-    while (segment_list->next != nullptr) {
+    while (segment_list->next != wor_bootio_nullptr__) {
         if (address >= segment_list->memory_segment.distance.start
             && address <= segment_list->memory_segment.distance.end) {
             return segment_list;
         }
         segment_list = segment_list->next;
     }
-    return nullptr;
+    return wor_bootio_nullptr__;
 }

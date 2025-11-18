@@ -11,7 +11,7 @@
  * \param address
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int dfuse_cmd_set_address(const struct Configuration *config, uint32_t address);
 
 /**
@@ -20,7 +20,7 @@ int dfuse_cmd_set_address(const struct Configuration *config, uint32_t address);
  * \param config
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int dfuse_cmd_erase_page(const struct Configuration *config, uint32_t address);
 
 /**
@@ -29,7 +29,7 @@ int dfuse_cmd_erase_page(const struct Configuration *config, uint32_t address);
  * \param config
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int dfuse_cmd_mass_erase(const struct Configuration *config);
 
 /**
@@ -38,6 +38,6 @@ int dfuse_cmd_mass_erase(const struct Configuration *config);
  * \param config
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int dfuse_cmd_leave(const struct Configuration *config);
 

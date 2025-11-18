@@ -1,16 +1,16 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <libusb.h>
-
 #include "load.h"
 #include "configuration.h"
 #include "dfu_file.h"
 #include "dfuse_command.h"
 #include "load.h"
 #include "transfer.h"
+#include "portable.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+
+#include <libusb.h>
 
 /**
  * \brief
@@ -19,7 +19,7 @@
  */
 static void print_devices(struct ConfigurationNode *device_node_root) {
     struct ConfigurationNode *device_node = device_node_root;
-    while (device_node != nullptr) {
+    while (device_node != wor_bootio_nullptr__) {
         printf("\nDevice info:"
                "\n\tName: %s"
                "\n\tSerial: %s"
@@ -37,10 +37,8 @@ static void print_devices(struct ConfigurationNode *device_node_root) {
 }
 
 int main() {
-
-
     libusb_context *ctx;
-    struct ConfigurationNode *confs = nullptr;
+    struct ConfigurationNode *confs = wor_bootio_nullptr__;
     int ec = libusb_init(&ctx);
 
     if (ec) {
@@ -56,7 +54,7 @@ int main() {
     for (int i = 0; i < device_num; ++i) {
         libusb_device *dev = device_list[i];
         confs = find_configurations(dev);
-        if (confs == nullptr) {
+        if (confs == wor_bootio_nullptr__) {
             continue;
         }
         if (confs->device.vendor_id == 0x0483 && confs->device.product_id == 0xdf11) {
@@ -70,8 +68,8 @@ int main() {
         return 1;
     }
 
-    uint8_t buf[150'000];
-    const int bytes_count = upload_dfuse(&confs->device, buf, 0x08001000, 150'000, 1024);
+    uint8_t buf[150000];
+    const int bytes_count = upload_dfuse(&confs->device, buf, 0x08001000, 150000, 1024);
     if (bytes_count < 0) {
         ec = bytes_count;
         return -1;
@@ -85,7 +83,7 @@ int main() {
         printf("Error to write file.\n");
     }
 
-    ec = download_dfuse(&confs->device, &file, 0x8'001'000, 1024);
+    ec = download_dfuse(&confs->device, &file, 0x8001000, 1024);
 
     dfu_file_free(&file);
     // ec = dfu_detach(&confs->device, 100);

@@ -28,7 +28,7 @@ add_executable(wor-bootio_example)
 
 target_compile_features(wor-bootio_example
         PUBLIC
-        c_std_23)
+        $<IF:$<C_COMPILER_ID:MSVC>,c_std_17,c_std_23>)
 
 target_include_directories(wor-bootio_example
         PUBLIC

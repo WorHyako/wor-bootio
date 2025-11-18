@@ -15,7 +15,7 @@
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int upload_dfu(const struct Configuration *config,
                const uint8_t *buffer,
                size_t expected_size,
@@ -31,7 +31,7 @@ int upload_dfu(const struct Configuration *config,
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int download_dfu(const struct Configuration *config,
                  uint8_t *buffer,
                  size_t expected_size,
@@ -48,7 +48,7 @@ int download_dfu(const struct Configuration *config,
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int upload_dfuse(const struct Configuration *config,
                  const uint8_t *buffer,
                  size_t start_address,
@@ -65,7 +65,7 @@ int upload_dfuse(const struct Configuration *config,
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int download_dfuse(const struct Configuration *config,
                    struct DfuFile *file,
                    size_t start_address,

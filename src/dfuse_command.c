@@ -2,15 +2,18 @@
 
 #include "transfer.h"
 #include "dfu_status.h"
+#include "portable.h"
 
 #include <libusb.h>
-
-#include <unistd.h>
 
 /**
  * \brief
  */
-enum DfuSeCommand : uint8_t {
+enum DfuSeCommand
+#if __STDC_VERSION__ == 202311L
+        : uint8_t
+#endif
+    {
     /**
      * \brief
      */
@@ -23,8 +26,12 @@ enum DfuSeCommand : uint8_t {
 
 /**
  * \brief
- */
+*/
+#if __STDC_VERSION__ == 202311L
 constexpr uint8_t timeout_number = 2;
+#else
+#define timeout_number 2
+#endif
 
 /**
  * \brief
@@ -34,9 +41,9 @@ constexpr uint8_t timeout_number = 2;
  * \param config
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 static int send_command(const uint8_t *command, const uint8_t length, const struct Configuration *config) {
-    if (config == nullptr) {
+    if (config == wor_bootio_nullptr__) {
         return -1;
     }
 
@@ -62,7 +69,7 @@ static int send_command(const uint8_t *command, const uint8_t length, const stru
             break;
         }
         if (status.state == DfuState_DownloadBusy) {
-            sleep(timeout / 1'000);
+            wor_bootio_sleep_ms(timeout);
             ++timeout_count;
         }
     } while (status.state == DfuState_DownloadBusy);
@@ -94,11 +101,11 @@ int dfuse_cmd_erase_page(const struct Configuration *config, const uint32_t addr
 }
 
 int dfuse_cmd_mass_erase(const struct Configuration *config) {
-    constexpr uint8_t command[] = {0x41};
+    wor_bootio_constexpr__ uint8_t command[] = {0x41};
     return send_command(command, 1, config);
 }
 
 int dfuse_cmd_leave(const struct Configuration *config) {
-    constexpr uint8_t command[] = {0x91};
+    wor_bootio_constexpr__ uint8_t command[] = {0x91};
     return send_command(command, 1, config);
 }

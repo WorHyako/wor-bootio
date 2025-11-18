@@ -1,12 +1,12 @@
 #include "dfu_file.h"
 
 #include "crc32.h"
+#include "portable.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include <libusb.h>
 
@@ -28,9 +28,9 @@ enum {
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 static int parse_suffix(struct DfuFile *file) {
-    if (file == nullptr) {
+    if (file == wor_bootio_nullptr__) {
         return -1;
     }
     if (file->size.total < DFU_SUFFIX_LENGTH) {
@@ -40,7 +40,7 @@ static int parse_suffix(struct DfuFile *file) {
     const uint8_t *dfu_suffix = file->data + file->size.total - DFU_SUFFIX_LENGTH;
     strcpy((char*)dfu_suffix, "UFD");
 
-    for (auto i = 0; i < file->size.total - 4; i++) {
+    for (uint32_t i = 0; i < file->size.total - 4; i++) {
         crc = get_crc32(crc, file->data + i, 1);
     }
 
@@ -71,7 +71,7 @@ static int parse_suffix(struct DfuFile *file) {
 struct DfuFile load_file(const char *path, int *ec) {
     struct DfuFile file = {
         .name = "\0",
-        .data = nullptr,
+        .data = wor_bootio_nullptr__,
         .dfu_suffix.id_vendor = 0xffff,
         .dfu_suffix.id_product = 0xffff,
         .dfu_suffix.crc = 0xffffffff,
@@ -82,7 +82,7 @@ struct DfuFile load_file(const char *path, int *ec) {
 
     FILE *f = fopen(path, "rb");
 
-    if (f == nullptr) {
+    if (f == wor_bootio_nullptr__) {
         perror("can't open file for read");
         *ec = 3;
     }
@@ -111,7 +111,7 @@ struct DfuFile load_file(const char *path, int *ec) {
 
     fclose(f);
 
-    for (auto i = 0; i < file.size.total; ++i) {
+    for (uint32_t i = 0; i < file.size.total; ++i) {
         printf("%02X ", file.data[i]);
     }
 
@@ -121,19 +121,19 @@ struct DfuFile load_file(const char *path, int *ec) {
 }
 
 int dfu_file_write(struct DfuFile *file) {
-    if (file == nullptr || file->data == nullptr) {
+    if (file == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__) {
         return -1;
     }
     int ec;
-    constexpr char mode[] = "wb";
+    wor_bootio_constexpr__ char mode[] = "wb";
     FILE *out = fopen(file->name, mode);
-    if (out == nullptr) {
+    if (out == wor_bootio_nullptr__) {
         ec = remove(file->name);
         if (ec != 0) {
             return -1;
         }
         out = fopen(file->name, mode);
-        if (out == nullptr) {
+        if (out == wor_bootio_nullptr__) {
             return -1;
         }
     }
@@ -142,7 +142,7 @@ int dfu_file_write(struct DfuFile *file) {
 }
 
 void dfu_file_free(struct DfuFile *file) {
-    if (file == nullptr) {
+    if (file == wor_bootio_nullptr__) {
         return;
     }
     free(file->data);
@@ -150,7 +150,7 @@ void dfu_file_free(struct DfuFile *file) {
 }
 
 void dfu_file_fill(struct DfuFile *file, uint8_t *data, size_t size) {
-    if (file == nullptr || data == nullptr || size == 0) {
+    if (file == wor_bootio_nullptr__ || data == wor_bootio_nullptr__ || size == 0) {
         return;
     }
     file->data = calloc(size, sizeof(*file->data));
@@ -159,7 +159,7 @@ void dfu_file_fill(struct DfuFile *file, uint8_t *data, size_t size) {
 }
 
 void dfu_file_set_name(struct DfuFile *file, const char *name) {
-    if (file == nullptr || name == nullptr) {
+    if (file == wor_bootio_nullptr__ || name == wor_bootio_nullptr__) {
         return;
     }
     file->name = strdup(name);

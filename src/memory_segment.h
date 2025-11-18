@@ -1,11 +1,17 @@
 #pragma once
 
+#include "portable.h"
+
 #include <stdint.h>
 
 /**
  * \brief
  */
-enum MemorySegmentType : uint8_t {
+enum MemorySegmentType
+#if __STDC_VERSION__ == 202311L
+        : uint8_t
+#endif
+    {
     /**
      * \brief
      */
@@ -78,7 +84,7 @@ struct MemorySegmentNode {
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **segment_list);
 
 /**
@@ -86,6 +92,7 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
  *
  * \param segment_list
  */
+wor_bootio_nodiscard__
 void free_memory_segment_list(struct MemorySegmentNode *segment_list);
 
 /**
@@ -95,7 +102,7 @@ void free_memory_segment_list(struct MemorySegmentNode *segment_list);
  * \param address
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 struct MemorySegment* find_segment(struct MemorySegmentNode *segment_list, uint32_t address);
 
 /**
@@ -105,5 +112,5 @@ struct MemorySegment* find_segment(struct MemorySegmentNode *segment_list, uint3
  * \param address
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 struct MemorySegmentNode* find_segment_node(struct MemorySegmentNode *segment_list, uint32_t address);

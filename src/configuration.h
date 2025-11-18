@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dfu_func_dt.h"
+#include "portable.h"
 
 #include <stdint.h>
 
@@ -35,7 +36,7 @@ struct Configuration {
     /**
      * \brief Interface number.
      */
-    uint8_t interface;
+    uint8_t interface_number;
     /**
      * \brief Function descriptor info.
      */
@@ -94,5 +95,5 @@ void free_device_tree(struct ConfigurationNode *device_node_root);
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 struct ConfigurationNode *find_configurations(struct libusb_device *dev);

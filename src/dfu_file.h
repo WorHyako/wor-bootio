@@ -85,10 +85,10 @@ struct DfuFile {
  *
  * \return
  */
-[[nodiscard, deprecated, maybe_unused]]
+wor_bootio_nodiscard__
 struct DfuFile load_file(const char *path, int *ec);
 
-[[nodiscard]]
+wor_bootio_nodiscard__
 int dfu_file_write(struct DfuFile* file);
 
 void dfu_file_free(struct DfuFile* file);

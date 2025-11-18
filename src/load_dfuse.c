@@ -3,14 +3,18 @@
 #include "memory_segment.h"
 #include "dfuse_command.h"
 #include "transfer.h"
+#include "portable.h"
 
 #include <libusb.h>
-#include <unistd.h>
 
 /**
  * \brief
- */
+*/
+#if __STDC_VERSION__ == 202311L
 constexpr uint16_t max_wait_count = 10;
+#else
+#define max_wait_count 10
+#endif
 
 /**
  * \brief
@@ -18,7 +22,7 @@ constexpr uint16_t max_wait_count = 10;
  * \param config
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 static int wait_for_download_idle(const struct Configuration *config) {
     int ec;
     struct DeviceDfuStatus status;
@@ -26,7 +30,7 @@ static int wait_for_download_idle(const struct Configuration *config) {
     do {
         ec = get_status(config, &status);
         if (ec == LIBUSB_ERROR_PIPE) {
-            sleep(5);
+            wor_bootio_sleep_ms(5);
             continue;
         }
 
@@ -37,7 +41,7 @@ static int wait_for_download_idle(const struct Configuration *config) {
             ec = -1;
             break;
         }
-        sleep(status.timeout);
+        wor_bootio_sleep_ms(status.timeout);
     } while (++i < max_wait_count || status.state != DfuState_DownloadIdle);
     return ec > -1 && status.status == DfuStatus_Ok
                ? -1
@@ -52,9 +56,9 @@ static int wait_for_download_idle(const struct Configuration *config) {
  * \param size
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 static int erase_pages(const struct Configuration *config, size_t start_address, size_t size) {
-    struct MemorySegmentNode *segment_list = nullptr;
+    struct MemorySegmentNode *segment_list = wor_bootio_nullptr__;
     int ec = parse_memory_segments(config->alt_name, &segment_list);
     if (ec < 0) {
         return -1;
@@ -62,7 +66,7 @@ static int erase_pages(const struct Configuration *config, size_t start_address,
 
     struct MemorySegmentNode *segment_node = find_segment_node(segment_list, start_address);
     for (const struct MemorySegmentNode *node = segment_node;
-         node != nullptr && node->memory_segment.distance.end < start_address + size;
+         node != wor_bootio_nullptr__ && node->memory_segment.distance.end < start_address + size;
          node = segment_node->next) {
         struct MemorySegment *segment_to_erase = &segment_node->memory_segment;
         if (segment_to_erase->type != MemorySegmentType_Writable
@@ -83,17 +87,17 @@ int upload_dfuse(const struct Configuration *config,
                  const size_t start_address,
                  const size_t expected_size,
                  uint16_t chunk_size) {
-    if (config == nullptr || config == nullptr || buffer == nullptr) {
+    if (config == wor_bootio_nullptr__ || config == wor_bootio_nullptr__ || buffer == wor_bootio_nullptr__) {
         return LIBUSB_ERROR_OTHER;
     }
-    struct MemorySegmentNode *segment_list = nullptr;
+    struct MemorySegmentNode *segment_list = wor_bootio_nullptr__;
     int ec = parse_memory_segments(config->alt_name, &segment_list);
 
     if (ec != 0) {
         return LIBUSB_ERROR_OTHER;
     }
     const struct MemorySegment *segment = find_segment(segment_list, start_address);
-    if (segment == nullptr || segment->type != MemorySegmentType_Readable) {
+    if (segment == wor_bootio_nullptr__ || segment->type != MemorySegmentType_Readable) {
         free_memory_segment_list(segment_list);
         return LIBUSB_ERROR_OTHER;
     }
@@ -142,7 +146,7 @@ int download_dfuse(const struct Configuration *config,
                    struct DfuFile *file,
                    const size_t start_address,
                    uint16_t chunk_size) {
-    if (config == nullptr || file->data == nullptr) {
+    if (config == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__) {
         return -1;
     }
 
@@ -185,7 +189,7 @@ int download_dfuse(const struct Configuration *config,
     }
     transfer_count++;
 
-    constexpr uint8_t terminating_byte = 0x00;
+    wor_bootio_constexpr__ uint8_t terminating_byte = 0x00;
     ec = dfuse_cmd_set_address(config, start_address);
     if (ec < 0) {
         goto out;

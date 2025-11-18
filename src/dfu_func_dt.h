@@ -5,7 +5,11 @@
 /**
  * \brief
  */
-enum DfuFuncDtAttributes : uint8_t {
+enum DfuFuncDtAttributes
+#if __STDC_VERSION__ == 202311L
+        : uint8_t
+#endif
+    {
     /**
      * \brief
      */
@@ -13,7 +17,7 @@ enum DfuFuncDtAttributes : uint8_t {
     /**
      * \brief
      */
-    DfuFuncDtAttributes_Detach = 0b1'000
+    DfuFuncDtAttributes_Detach = 0b1000
 };
 
 /**

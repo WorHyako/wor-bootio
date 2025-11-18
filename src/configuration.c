@@ -25,7 +25,7 @@ enum {
  *
  * \return
  */
-[[nodiscard]]
+wor_bootio_nodiscard__
 static int fill_descriptor(const uint8_t *desc_list, uint8_t length, struct DfuFunctionalDescriptor *func_dt) {
     int desc_idx = 0;
 
@@ -48,10 +48,10 @@ static int fill_descriptor(const uint8_t *desc_list, uint8_t length, struct DfuF
 }
 
 void free_device_tree(struct ConfigurationNode *device_node_root) {
-    if (device_node_root == nullptr) {
+    if (device_node_root == wor_bootio_nullptr__) {
         return;
     }
-    while (device_node_root != nullptr) {
+    while (device_node_root != wor_bootio_nullptr__) {
         struct ConfigurationNode *next = device_node_root->next;
         free(device_node_root);
         device_node_root = next;
@@ -61,15 +61,15 @@ void free_device_tree(struct ConfigurationNode *device_node_root) {
 struct ConfigurationNode *find_configurations(libusb_device *dev) {
     int ec;
     struct libusb_device_descriptor desc;
-    struct ConfigurationNode *conf_node_root = nullptr;
-    struct ConfigurationNode *conf_node_head = nullptr;
+    struct ConfigurationNode *conf_node_root = wor_bootio_nullptr__;
+    struct ConfigurationNode *conf_node_head = wor_bootio_nullptr__;
 
     libusb_get_device_descriptor(dev, &desc);
 
     for (int cfg_idx = 0; cfg_idx < desc.bNumConfigurations; ++cfg_idx) {
-        struct libusb_config_descriptor *cfg = nullptr;
+        struct libusb_config_descriptor *cfg = wor_bootio_nullptr__;
         ec = libusb_get_config_descriptor(dev, cfg_idx, &cfg);
-        if (ec != LIBUSB_SUCCESS || cfg == nullptr) {
+        if (ec != LIBUSB_SUCCESS || cfg == wor_bootio_nullptr__) {
             continue;
         }
 
@@ -83,7 +83,7 @@ struct ConfigurationNode *find_configurations(libusb_device *dev) {
         }
         for (int intf_idx = 0; intf_idx < cfg->bNumInterfaces; ++intf_idx) {
             const struct libusb_interface *intf = &cfg->interface[intf_idx];
-            if (intf == nullptr) {
+            if (intf == wor_bootio_nullptr__) {
                 break;
             }
             for (int alt_idx = 0; alt_idx < intf->num_altsetting; ++alt_idx) {
@@ -120,7 +120,7 @@ dfu_found:
 
         for (int intf_idx = 0; intf_idx < cfg->bNumInterfaces; ++intf_idx) {
             const struct libusb_interface *intf = &cfg->interface[intf_idx];
-            if (intf == nullptr) {
+            if (intf == wor_bootio_nullptr__) {
                 continue;
             }
             for (int alt_idx = 0; alt_idx < intf->num_altsetting; ++alt_idx) {
@@ -161,15 +161,14 @@ dfu_found:
                 }
                 libusb_close(dev_handle);
 
-                // struct ConfigurationNode conf_node;
                 struct ConfigurationNode *new_node = malloc(sizeof(struct ConfigurationNode));
-                if (new_node == nullptr) {
+                if (new_node == wor_bootio_nullptr__) {
                     libusb_free_config_descriptor(cfg);
-                    return nullptr;
+                    return wor_bootio_nullptr__;
                 }
-                new_node->next = nullptr;
+                new_node->next = wor_bootio_nullptr__;
 
-                if (conf_node_head == nullptr) {
+                if (conf_node_head == wor_bootio_nullptr__) {
                     conf_node_head = new_node;
                     conf_node_root = conf_node_head;
                 } else {
@@ -184,7 +183,7 @@ dfu_found:
                 conf->bcd_device = desc.bcdDevice;
                 conf->vendor_id = desc.idVendor;
                 conf->product_id = desc.idProduct;
-                conf->interface = alt->bInterfaceNumber;
+                conf->interface_number = alt->bInterfaceNumber;
                 conf->alt_setting = alt->bAlternateSetting;
                 conf->dev_number = libusb_get_device_address(dev);
                 conf->bus_number = libusb_get_bus_number(dev);
