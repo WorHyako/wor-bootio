@@ -3,9 +3,9 @@
 #include "transfer.h"
 #include "portable.h"
 
-#include <libusb.h>
-
 #include <stdlib.h>
+
+#include <libusb.h>
 
 /**
  * \brief

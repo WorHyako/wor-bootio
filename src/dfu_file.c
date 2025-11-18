@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include <libusb.h>
-
 enum {
     /**
      * \brief

@@ -13,12 +13,13 @@
 #define wor_bootio_nullptr__ NULL
 
 #elif
-static_assert(false, "Only MSVC (C17) and LLVM Clang (C23) compilers are supported.")
+static_assert(false, "Only MSVC (C17) and LLVM Clang (C17/C23) compilers are supported.")
 #endif
 
 #if defined(_MSC_VER)
 #include <Windows.h>
 #elif defined(__clang__)
+#include <time.h>
 #include <unistd.h>
 #endif
 
@@ -27,13 +28,13 @@ static_assert(false, "Only MSVC (C17) and LLVM Clang (C23) compilers are support
  *
  * \param milliseconds
  */
-inline void wor_bootio_sleep_ms(const int milliseconds) {
+static void wor_bootio_sleep_ms(const int milliseconds) {
 #ifdef WIN32
     Sleep(milliseconds);
 #else
     struct timespec ts;
     ts.tv_sec = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
+    nanosleep(&ts, wor_bootio_nullptr__);
 #endif
 }

@@ -92,7 +92,6 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
  *
  * \param segment_list
  */
-wor_bootio_nodiscard__
 void free_memory_segment_list(struct MemorySegmentNode *segment_list);
 
 /**

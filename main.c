@@ -2,8 +2,6 @@
 #include "configuration.h"
 #include "dfu_file.h"
 #include "dfuse_command.h"
-#include "load.h"
-#include "transfer.h"
 #include "portable.h"
 
 #include <stdlib.h>

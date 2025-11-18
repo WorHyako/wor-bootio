@@ -3,7 +3,6 @@
 #include "portable.h"
 
 #include <libusb.h>
-#include <stdarg.h>
 
 /**
  * \brief
