@@ -28,7 +28,7 @@ static_assert(false, "Only MSVC (C17) and LLVM Clang (C17/C23) compilers are sup
  *
  * \param milliseconds
  */
-static void wor_bootio_sleep_ms(const int milliseconds) {
+static void wor_bootio_sleep_ms(const uint32_t milliseconds) {
 #ifdef WIN32
     Sleep(milliseconds);
 #else

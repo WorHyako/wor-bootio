@@ -40,4 +40,3 @@ int dfuse_cmd_mass_erase(const struct Configuration *config);
  */
 wor_bootio_nodiscard__
 int dfuse_cmd_leave(const struct Configuration *config);
-

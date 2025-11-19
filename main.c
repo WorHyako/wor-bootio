@@ -3,6 +3,7 @@
 #include "dfu_file.h"
 #include "dfuse_command.h"
 #include "portable.h"
+#include "transfer.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -60,6 +61,10 @@ int main() {
         }
         print_devices(confs);
     }
+    if (confs == wor_bootio_nullptr__) {
+        libusb_exit(ctx);
+        return -1;;
+    }
     ec = libusb_open(confs->device.device, &confs->device.device_handle);
     if (ec != LIBUSB_SUCCESS) {
         printf("Error to open device");
@@ -83,9 +88,16 @@ int main() {
 
     ec = download_dfuse(&confs->device, &file, 0x8001000, 1024);
 
+    /**
+     * Reconnecting device
+     */
+    const int manifest_tolerant = confs->device.func_dt.attributes & DfuFuncDtAttributes_ManifestTolerant;
+    if (manifest_tolerant) {
+        ec = dfu_detach(&confs->device, 100);
+        ec = libusb_reset_device(confs->device.device_handle);
+    }
+
     dfu_file_free(&file);
-    // ec = dfu_detach(&confs->device, 100);
-    // ec = libusb_reset_device(confs->device.device_handle);
     free_device_tree(confs);
     libusb_close(confs->device.device_handle);
     libusb_exit(ctx);

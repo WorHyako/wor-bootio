@@ -21,21 +21,13 @@ target_link_libraries(libusb
         INTERFACE
         ${libusb_LINK_LIBRARIES})
 
-# ----------- #
-#   example   #
-# ----------- #
-add_executable(wor-bootio_example)
+# --------------- #
+#   Wor::BootIo   #
+# --------------- #
+add_library(wor_bootio)
+add_library(Wor::BootIo ALIAS wor_bootio)
 
-target_compile_features(wor-bootio_example
-        PUBLIC
-        $<IF:$<C_COMPILER_ID:MSVC>,c_std_17,c_std_23>)
-
-target_include_directories(wor-bootio_example
-        PUBLIC
-        src)
-
-target_sources(wor-bootio_example
-        PRIVATE
+set(Sources
         src/dfu_file.c
         src/configuration.c
         src/transfer.c
@@ -43,9 +35,27 @@ target_sources(wor-bootio_example
         src/load_dfuse.c
         src/crc32.c
         src/memory_segment.c
-        src/dfuse_command.c
-        main.c)
+        src/dfuse_command.c)
 
-target_link_libraries(wor-bootio_example
-        PRIVATE
+target_sources(wor_bootio
+        PRIVATE ${Sources})
+
+target_include_directories(wor_bootio
+        PUBLIC src)
+
+target_link_libraries(wor_bootio
+        PUBLIC
         libusb)
+
+target_compile_features(wor_bootio
+        PUBLIC
+        $<IF:$<C_COMPILER_ID:MSVC>,c_std_17,c_std_23>)
+
+# ----------- #
+#   Example   #
+# ----------- #
+add_executable(wor_bootio-example main.c)
+
+target_link_libraries(wor_bootio-example
+        PRIVATE
+        Wor::BootIo)

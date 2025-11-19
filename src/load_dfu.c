@@ -7,82 +7,6 @@
 
 #include <libusb.h>
 
-/**
- * \brief
-*/
-#if __STDC_VERSION__ == 202311L
-constexpr uint16_t max_wait_count = 10;
-#else
-#define max_wait_count 10
-#endif
-
-/**
- * \brief
- *
- * \param config
- * \return
- */
-wor_bootio_nodiscard__
-static int wait_for_download_idle(const struct Configuration *config) {
-    int ec;
-    struct DeviceDfuStatus status;
-    uint16_t i = 0;
-    do {
-        ec = get_status(config, &status);
-        if (ec < 0) {
-            break;
-        }
-        if (status.state == DfuState_Error) {
-            ec = -1;
-            break;
-        }
-        wor_bootio_sleep_ms(status.timeout);
-    } while (++i < max_wait_count || status.state != DfuState_DownloadIdle);
-    return ec > -1 && status.status == DfuStatus_Ok
-               ? -1
-               : ec;
-}
-
-/**
- * \brief
- *
- * \param config
- * \return
- */
-wor_bootio_nodiscard__
-static int wait_for_dfu_idle(const struct Configuration *config) {
-    int ec;
-    struct DeviceDfuStatus status;
-
-    const int manifest_tolerant = config->func_dt.attributes & DfuFuncDtAttributes_ManifestTolerant;
-
-    uint16_t i = 0;
-    do {
-        ec = get_status(config, &status);
-        if (ec < 0) {
-            break;
-        }
-        switch (status.state) {
-        case DfuState_ManifestSync:
-        case DfuState_Manifest:
-            break;
-        case DfuState_ManifestWaitReset:
-            if (manifest_tolerant) {
-                return ec;
-            }
-            ec = libusb_reset_device(config->device_handle);
-            if (ec < 0) {
-                return ec;
-            }
-            break;
-        default:
-            break;
-        }
-        wor_bootio_sleep_ms(status.timeout);
-    } while (++i < max_wait_count || status.state != DfuState_Idle);
-    return ec;
-}
-
 int upload_dfu(const struct Configuration *config,
                const uint8_t *buffer,
                const size_t expected_size,
@@ -103,6 +27,7 @@ int upload_dfu(const struct Configuration *config,
         }
 
         const int bytes = transfer_in(config, buf_head, chunk_size, transfer_count);
+
         if (bytes < 0) {
             ec = bytes;
             break;
@@ -110,6 +35,7 @@ int upload_dfu(const struct Configuration *config,
 
         buf_head += bytes;
         total_bytes += bytes;
+
         if (total_bytes >= expected_size || bytes < chunk_size) {
             ec = LIBUSB_SUCCESS;
             break;
@@ -139,36 +65,38 @@ int download_dfu(const struct Configuration *config,
         if (expected_size - total_bytes < chunk_size) {
             chunk_size = expected_size - total_bytes;
         }
-        const uint8_t *buf_head = buffer + chunk_size * i;
+        const uint8_t *buf_head = buffer + (chunk_size * i);
         transfer_count = i + 2;
         const int bytes_sent = transfer_out(config, buf_head, chunk_size, transfer_count);
         if (bytes_sent < 0) {
-            ec = bytes_sent;
-            break;
+            goto out;
         }
 
         total_bytes += bytes_sent;
 
-        if (bytes_sent < chunk_size) {
-            ec = LIBUSB_SUCCESS;
-            break;
-        }
         ec = wait_for_download_idle(config);
         if (ec < 0) {
-            break;
+            goto out;
         }
     }
-    transfer_count++;
+
+    ec = abort_and_wait_idle(config);
     if (ec < 0) {
-        return ec;
+        goto out;
     }
 
     wor_bootio_constexpr__ uint8_t terminating_byte = 0x00;
+    transfer_count++;
     ec = transfer_out(config, &terminating_byte, 0, transfer_count);
+
     if (ec < 0) {
         return ec;
     }
 
-    ec = wait_for_dfu_idle(config);
-    return ec;
+    ec = wait_for_manifest(config);
+
+out:
+    return ec < 0
+               ? ec
+               : (int)total_bytes;
 }

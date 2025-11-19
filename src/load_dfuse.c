@@ -9,47 +9,6 @@
 
 /**
  * \brief
-*/
-#if __STDC_VERSION__ == 202311L
-constexpr uint16_t max_wait_count = 10;
-#else
-#define max_wait_count 10
-#endif
-
-/**
- * \brief
- *
- * \param config
- * \return
- */
-wor_bootio_nodiscard__
-static int wait_for_download_idle(const struct Configuration *config) {
-    int ec;
-    struct DeviceDfuStatus status;
-    uint16_t i = 0;
-    do {
-        ec = get_status(config, &status);
-        if (ec == LIBUSB_ERROR_PIPE) {
-            wor_bootio_sleep_ms(5);
-            continue;
-        }
-
-        if (ec < 0) {
-            break;
-        }
-        if (status.state == DfuState_Error) {
-            ec = -1;
-            break;
-        }
-        wor_bootio_sleep_ms(status.timeout);
-    } while (++i < max_wait_count || status.state != DfuState_DownloadIdle);
-    return ec > -1 && status.status == DfuStatus_Ok
-               ? -1
-               : ec;
-}
-
-/**
- * \brief
  *
  * \param config
  * \param start_address
@@ -128,8 +87,17 @@ int upload_dfuse(const struct Configuration *config,
             ec = bytes;
             break;
         }
+        if (bytes == 0) {
+            ec = LIBUSB_SUCCESS;
+            break;
+        }
         total_bytes += bytes;
         buf_head += bytes;
+
+        if (total_bytes >= expected_size || bytes < chunk_size) {
+            ec = LIBUSB_SUCCESS;
+            break;
+        }
     }
     if (ec < 0) {
         return ec;
@@ -187,22 +155,20 @@ int download_dfuse(const struct Configuration *config,
             goto out;
         }
     }
+
+    ec = abort_and_wait_idle(config);
+    if (ec < 0) {
+        goto out;
+    }
     transfer_count++;
 
     wor_bootio_constexpr__ uint8_t terminating_byte = 0x00;
-    ec = dfuse_cmd_set_address(config, start_address);
-    if (ec < 0) {
-        goto out;
-    }
     ec = transfer_out(config, &terminating_byte, 0, transfer_count);
 
-    if (ec < 0) {
-        goto out;
-    }
-    ec = wait_for_download_idle(config);
+    ec = wait_for_manifest(config);
 
 out:
     return ec < 0
-               ? 0
+               ? ec
                : (int)total_bytes;
 }
