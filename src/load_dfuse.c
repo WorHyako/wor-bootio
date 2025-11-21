@@ -127,13 +127,11 @@ int download_dfuse(const struct Configuration *config,
     }
 
     uint8_t *buffer_head = file->data;
-    uint32_t transfer_count = 0;
-    for (; total_bytes < file->size.total; ++transfer_count) {
-        ec = dfuse_cmd_set_address(config, start_address);
-        if (ec < 0) {
-            goto out;
-        }
-
+    ec = dfuse_cmd_set_address(config, start_address);
+    if (ec < 0) {
+        goto out;
+    }
+    for (uint32_t transfer_count = 2; total_bytes < file->size.total; ++transfer_count) {
         chunk_size = file->size.total - total_bytes > chunk_size
                          ? chunk_size
                          : file->size.total - total_bytes;
@@ -160,10 +158,9 @@ int download_dfuse(const struct Configuration *config,
     if (ec < 0) {
         goto out;
     }
-    transfer_count++;
 
     wor_bootio_constexpr__ uint8_t terminating_byte = 0x00;
-    ec = transfer_out(config, &terminating_byte, 0, transfer_count);
+    ec = transfer_out(config, &terminating_byte, 0, 0);
 
     ec = wait_for_manifest(config);
 

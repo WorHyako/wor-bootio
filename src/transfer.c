@@ -191,8 +191,7 @@ int wait_for_dfu_idle(const struct Configuration *config) {
         default:
             break;
         }
-        wor_bootio_sleep_ms(status.timeout);
-    } while (++i < max_wait_count && status.state != DfuState_DownloadIdle);
+    } while (++i < max_wait_count && status.state != DfuState_Idle);
     return ec > -1 && status.status != DfuStatus_Ok
                ? -1
                : ec;
@@ -207,5 +206,5 @@ int abort_and_wait_idle(const struct Configuration *config) {
         return ec;
     }
 
-    return wait_for_download_idle(config);
+    return wait_for_dfu_idle(config);
 }
