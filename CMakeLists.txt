@@ -5,6 +5,8 @@ project(wor-bootio
         VERSION 0.0.0)
 
 find_package(PkgConfig)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+include(TargetStaticAnalyze)
 
 # ---------- #
 #   libusb   #
@@ -50,6 +52,8 @@ target_link_libraries(wor_bootio
 target_compile_features(wor_bootio
         PUBLIC
         $<IF:$<C_COMPILER_ID:MSVC>,c_std_17,c_std_23>)
+
+CreateAnalyzeTargetFor(wor_bootio)
 
 # ----------- #
 #   Example   #

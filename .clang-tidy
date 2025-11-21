@@ -1,0 +1,29 @@
+---
+Checks: >
+  performance-*,
+  portability-*,
+  clang-diagnostic-*,
+  clang-analyzer-null*,
+  clang-analyzer-core*,
+  clang-analyzer-unix.*,
+  clang-analyzer-deadcode.*
+  google-readability-*,
+  bugprone-suspicious-casting,
+  bugprone-sizeof-expression,
+  bugprone-memset-usage,
+  -bugprone-easily-swappable-parameters,
+  -performance-unnecessary-value-param,
+  -portability-simd-intrinsics,
+  cert-*,
+  -cert-str34-c,
+  hicpp-signed-bitwise,
+  -hicpp-named-parameter,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-identifier-naming
+
+WarningsAsErrors: '*'
+
+HeaderFilterRegex: '(src/.*\.h|main\.c)'
+
+FormatStyle: file
