@@ -27,8 +27,6 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
 
     descriptor += scanf_idx;
 
-    /// @Internal Flash /0x08000000/1*001Ka,2*001Kg
-
     while (ec = sscanf(descriptor, "/0x%x/%n", &address_start, &scanf_idx), ec > 0) {
         descriptor += scanf_idx;
 

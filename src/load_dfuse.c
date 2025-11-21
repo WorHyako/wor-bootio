@@ -114,27 +114,28 @@ int download_dfuse(const struct Configuration *config,
                    struct DfuFile *file,
                    const size_t start_address,
                    uint16_t chunk_size) {
-    if (config == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__) {
+    if (config == wor_bootio_nullptr__ || file == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__) {
         return -1;
     }
 
+    const size_t firmware_size = file->size.total - file->size.suffix - file->size.prefix;
     size_t total_bytes = 0;
     int ec = 0;
 
-    ec = erase_pages(config, start_address, file->size.total);
+    ec = erase_pages(config, start_address, firmware_size);
     if (ec < 0) {
         goto out;
     }
 
-    uint8_t *buffer_head = file->data;
+    uint8_t *buffer_head = file->data + file->size.prefix;
     ec = dfuse_cmd_set_address(config, start_address);
     if (ec < 0) {
         goto out;
     }
-    for (uint32_t transfer_count = 2; total_bytes < file->size.total; ++transfer_count) {
-        chunk_size = file->size.total - total_bytes > chunk_size
+    for (uint32_t transfer_count = 2; total_bytes < firmware_size; ++transfer_count) {
+        chunk_size = firmware_size - total_bytes > chunk_size
                          ? chunk_size
-                         : file->size.total - total_bytes;
+                         : firmware_size - total_bytes;
         const int bytes_sent = transfer_out(config,
                                             buffer_head,
                                             chunk_size,

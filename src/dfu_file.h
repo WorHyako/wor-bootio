@@ -5,19 +5,16 @@
 
 #include "configuration.h"
 
+#pragma pack(push, 1)
+
 /**
  * \brief
  */
 struct DfuFile {
     /**
-     * \brief Local file path.
-     */
-    const char *name;
-
-    /**
      * \brief Path
      */
-    const char* path;
+    const char *path;
 
     /**
      * \brief Firmware data.
@@ -61,7 +58,7 @@ struct DfuFile {
         /**
          * \brief DFU version.
          */
-        uint8_t bcd_dfu;
+        uint16_t bcd_dfu;
         /**
          * \brief DFU signature. Must be "UFD" (0x55 0x46 0x44).
          */
@@ -75,24 +72,37 @@ struct DfuFile {
          */
         uint32_t crc;
     } dfu_suffix;
+
+    struct {
+        size_t address;
+    } dfu_prefix;
 };
+
+#pragma pack(pop)
 
 /**
  * \brief
  *
- * \param path
- * \param ec
+ * \param file
+ * \param data
+ * \param size
  *
  * \return
  */
 wor_bootio_nodiscard__
-struct DfuFile load_file(const char *path, int *ec);
+int load_file(struct DfuFile *file, uint8_t *data, size_t size);
 
-wor_bootio_nodiscard__
-int dfu_file_write(struct DfuFile* file);
+/**
+ * \brief
+ *
+ * \param file
+ */
+void dfu_file_free(struct DfuFile *file);
 
-void dfu_file_free(struct DfuFile* file);
-
-void dfu_file_fill(struct DfuFile* file, uint8_t* data, size_t size);
-
-void dfu_file_set_name(struct DfuFile* file, const char* name);
+/**
+ * \param
+ *
+ * \param file
+ * \param path
+ */
+void dfu_file_set_path(struct DfuFile *file, const char *path);

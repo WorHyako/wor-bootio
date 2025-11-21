@@ -8,16 +8,37 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-enum {
+/**
+ * \brief
+ */
+enum
+#if __STDC_VERSION__ == 202311L
+    : uint8_t
+#endif
+{
     /**
      * \brief
      */
-    DFU_SUFFIX_LENGTH = 16,
+    DfuSuffixSize = 16,
     /**
      * \brief
      */
-    DFU_PREFIX_LENGTH = 8,
+    DfuPrefixSize = 8
 };
+
+/**
+ * \brief
+ *
+ * \param file
+ */
+void dfu_file_fill(struct DfuFile *file, const uint8_t *data, const size_t size) {
+    if (file == wor_bootio_nullptr__ || data == wor_bootio_nullptr__ || size == 0) {
+        return;
+    }
+    file->data = (uint8_t *)data;
+    file->size.total = size;
+    data = wor_bootio_nullptr__;
+}
 
 /**
  * \brief
@@ -28,114 +49,106 @@ enum {
  */
 wor_bootio_nodiscard__
 static int parse_suffix(struct DfuFile *file) {
-    if (file == wor_bootio_nullptr__) {
+    if (file == wor_bootio_nullptr__ || file->size.total < DfuSuffixSize) {
         return -1;
     }
-    if (file->size.total < DFU_SUFFIX_LENGTH) {
-        return 1;
-    }
-    uint32_t crc = 0;
-    const uint8_t *dfu_suffix = file->data + file->size.total - DFU_SUFFIX_LENGTH;
-    strcpy((char*)dfu_suffix, "UFD");
+    int ec = 0;
+    wor_bootio_constexpr__ uint8_t default_ucd_dfu_signature[3] = { 0x55, 0x46, 0x44 };
+    file->dfu_suffix.bcd_device = 0;
+    file->dfu_suffix.length = 0;
+    file->dfu_suffix.ucd_dfu_signature[0] = 0;
+    file->dfu_suffix.ucd_dfu_signature[1] = 0;
+    file->dfu_suffix.ucd_dfu_signature[2] = 0;
+    file->dfu_suffix.bcd_dfu = 0;
+    file->dfu_suffix.id_vendor = 0;
+    file->dfu_suffix.id_product = 0;
 
+    const uint8_t *dfu_suffix = file->data + file->size.total - DfuSuffixSize;
+    memcpy(file->dfu_suffix.ucd_dfu_signature, (uint8_t *)dfu_suffix + 10, 3 * sizeof(uint8_t));
+    if (memcmp(file->dfu_suffix.ucd_dfu_signature, default_ucd_dfu_signature, 3) != 0) {
+        ec = -1;
+        return ec;
+    }
+
+    uint32_t crc = 0xffffffff;
     for (uint32_t i = 0; i < file->size.total - 4; i++) {
         crc = get_crc32(crc, file->data + i, 1);
     }
-
-    file->dfu_suffix.crc = (dfu_suffix[15] << 24) +
-                           (dfu_suffix[14] << 16) +
-                           (dfu_suffix[13] << 8) +
-                           dfu_suffix[12];
-
+    memcpy(&file->dfu_suffix.crc, dfu_suffix + 12, sizeof(uint32_t));
     if (file->dfu_suffix.crc != crc) {
-        perror("DFU suffix CRC does not match");
-        return 3;
+        ec = -1;
+        return ec;
     }
 
-    file->dfu_suffix.bcd_dfu = (dfu_suffix[7] << 8) + dfu_suffix[6];
+    memcpy(&file->dfu_suffix.bcd_dfu, dfu_suffix + 6, sizeof(uint16_t));
     file->size.suffix = dfu_suffix[11];
-    if (file->size.suffix < DFU_SUFFIX_LENGTH || file->size.suffix > file->size.total) {
-        perror("Unsupported DFU suffix length");
-        return 4;
+    if (file->size.suffix < DfuSuffixSize || file->size.suffix > file->size.total) {
+        file->size.suffix = DfuSuffixSize;
     }
 
-    file->dfu_suffix.id_vendor = (dfu_suffix[5] << 8) + dfu_suffix[4];
-    file->dfu_suffix.id_product = (dfu_suffix[3] << 8) + dfu_suffix[2];
-    file->dfu_suffix.bcd_device = (dfu_suffix[1] << 8) + dfu_suffix[0];
-
-    return 0;
+    memcpy(&file->dfu_suffix.bcd_device, dfu_suffix, sizeof(uint16_t));
+    memcpy(&file->dfu_suffix.id_product, dfu_suffix + 2, sizeof(uint16_t));
+    memcpy(&file->dfu_suffix.id_vendor, dfu_suffix + 4, sizeof(uint16_t));
+    return ec;
 }
 
-struct DfuFile load_file(const char *path, int *ec) {
-    struct DfuFile file = {
-        .name = "\0",
-        .data = wor_bootio_nullptr__,
-        .dfu_suffix.id_vendor = 0xffff,
-        .dfu_suffix.id_product = 0xffff,
-        .dfu_suffix.crc = 0xffffffff,
-        .size.total = 0,
-        .size.prefix = 0,
-        .size.suffix = 0,
-    };
-
-    FILE *f = fopen(path, "rb");
-
-    if (f == wor_bootio_nullptr__) {
-        perror("can't open file for read");
-        *ec = 3;
+/**
+ * \brief
+ *
+ * \param file
+ * \return
+ */
+wor_bootio_nodiscard__
+static int parse_prefix(struct DfuFile *file) {
+    int ec = -1;
+    file->dfu_prefix.address = 0x00;
+    if (file == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__ || file->size.total < DfuPrefixSize) {
+        return ec;
     }
-
-    fseek(f, 0, SEEK_END);
-    file.size.total = ftell(f);
-    rewind(f);
-
-    if (file.size.total > SIZE_MAX) {
-        perror("File too large for memory allocation.");
-        *ec = 2;
+    uint32_t firmware_size_from_prefix = 0;
+    const uint32_t firmware_size = (uint32_t)file->size.total - file->size.suffix - DfuPrefixSize;
+    if (file->data[0] == 0x01 && file->data[1] == 0x00) {
+        memcpy(&firmware_size_from_prefix, file->data + 4, sizeof(uint32_t));
     }
-
-    file.data = malloc(file.size.total);
-    if (!file.data) {
-        fclose(f);
-        *ec = 1;
-        return file;
+    if (firmware_size == firmware_size_from_prefix) {
+        uint16_t address;
+        memcpy(&address, file->data + 2, sizeof(uint16_t));
+        file->dfu_prefix.address = address * 1024;
+        ec = 0;
     }
-
-    const size_t read_bytes = fread(file.data, 1, file.size.total, f);
-    if (read_bytes != file.size.total) {
-        free(file.data);
-        perror("fread");
-    }
-
-    fclose(f);
-
-    for (uint32_t i = 0; i < file.size.total; ++i) {
-        printf("%02X ", file.data[i]);
-    }
-
-    int parse_result = 0;
-    parse_result = parse_suffix(&file);
-    return file;
+    return ec;
 }
 
-int dfu_file_write(struct DfuFile *file) {
-    if (file == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__) {
+/**
+ * \brief
+ *
+ * \param file
+ * \param data
+ * \param size
+ * \return
+ */
+wor_bootio_nodiscard__
+static int parse_raw_data(struct DfuFile *file, const uint8_t *data, const size_t size) {
+    dfu_file_fill(file, data, size);
+    const int ec_suffix = parse_suffix(file) == 0;
+    const int ec_prefix = parse_prefix(file) == 0;
+    return ec_suffix && ec_prefix;;
+}
+
+int load_file(struct DfuFile *file, uint8_t *data, size_t size) {
+    if (file == wor_bootio_nullptr__ || data == wor_bootio_nullptr__ || size == 0) {
         return -1;
     }
     int ec;
-    wor_bootio_constexpr__ char mode[] = "wb";
-    FILE *out = fopen(file->name, mode);
-    if (out == wor_bootio_nullptr__) {
-        ec = remove(file->name);
-        if (ec != 0) {
-            return -1;
-        }
-        out = fopen(file->name, mode);
-        if (out == wor_bootio_nullptr__) {
-            return -1;
-        }
+    if (file->data != wor_bootio_nullptr__) {
+        file->data = wor_bootio_nullptr__;
+        free((char *)file->data);
     }
-    ec = (int)fwrite(file->data, sizeof(*file->data), file->size.total, out);
+    file->size.total = 0;
+    file->size.suffix = 0;
+    file->size.prefix = 0;
+
+    ec = parse_raw_data(file, data, size);
     return ec;
 }
 
@@ -143,22 +156,23 @@ void dfu_file_free(struct DfuFile *file) {
     if (file == wor_bootio_nullptr__) {
         return;
     }
-    free(file->data);
-    free((char *)file->name);
+    if (file->data != wor_bootio_nullptr__) {
+        free(file->data);
+        file->data = wor_bootio_nullptr__;
+    }
+    if (file->path != wor_bootio_nullptr__) {
+        free((char *)file->path);
+        file->path = wor_bootio_nullptr__;
+    }
 }
 
-void dfu_file_fill(struct DfuFile *file, uint8_t *data, size_t size) {
-    if (file == wor_bootio_nullptr__ || data == wor_bootio_nullptr__ || size == 0) {
+void dfu_file_set_path(struct DfuFile *file, const char *path) {
+    if (file == wor_bootio_nullptr__ || path == wor_bootio_nullptr__) {
         return;
     }
-    file->data = calloc(size, sizeof(*file->data));
-    memcpy(file->data, data, size);
-    file->size.total = size;
-}
-
-void dfu_file_set_name(struct DfuFile *file, const char *name) {
-    if (file == wor_bootio_nullptr__ || name == wor_bootio_nullptr__) {
-        return;
+    if (file->path != wor_bootio_nullptr__) {
+        free((char *)file->path);
+        file->path = wor_bootio_nullptr__;
     }
-    file->name = strdup(name);
+    file->path = strdup(path);
 }

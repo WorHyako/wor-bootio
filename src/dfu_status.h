@@ -7,9 +7,9 @@
  */
 enum DfuState
 #if __STDC_VERSION__ == 202311L
-        : uint8_t
+    : uint8_t
 #endif
-    {
+{
     DfuState_AppIdle = 0x00,
     DfuState_AppDetach = 0x01,
     DfuState_Idle = 0x02,
@@ -28,9 +28,9 @@ enum DfuState
  */
 enum DfuStatus
 #if __STDC_VERSION__ == 202311L
-        : uint8_t
+    : uint8_t
 #endif
-    {
+{
     DfuStatus_Ok = 0x0,
     DfuStatus_ErrorTarget = 0x01,
     DfuStatus_ErrorFile = 0x02,
@@ -63,7 +63,7 @@ struct DeviceDfuStatus {
      * \brief Minimum time, in milliseconds, that the host should wait before sending
      * a subsequent DFU_GETSTATUS request,
      */
-    uint32_t timeout : 24;
+    uint32_t timeout;
     /**
      * \brief An indication of the state that the device is going to enter
      * immediately following transmission of this response.

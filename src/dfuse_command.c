@@ -21,7 +21,15 @@ enum DfuSeCommand
     /**
      * \brief
      */
-    DfuSeCommand_ErasePage = 0x41
+    DfuSeCommand_ErasePage = 0x41,
+    /**
+     * \brief
+     */
+    DfuSeCommand_MassErase = 0x41,
+    /**
+     * \brief
+     */
+    DfuSeCommand_Leave = 0x91
 };
 
 /**
@@ -65,14 +73,10 @@ static int send_command(const uint8_t *command, const uint8_t length, const stru
             timeout = 1;
         }
 
-        if (status.state != DfuState_DownloadBusy && status.state != DfuState_DownloadIdle) {
-            break;
-        }
         if (status.state == DfuState_DownloadBusy) {
             wor_bootio_sleep_ms(timeout);
-            ++timeout_count;
         }
-    } while (status.state == DfuState_DownloadBusy);
+    } while (status.state != DfuState_DownloadIdle && ++timeout_count < timeout_number);
 
     if (status.status != DfuStatus_Ok) {
         return LIBUSB_ERROR_PIPE;
@@ -101,11 +105,11 @@ int dfuse_cmd_erase_page(const struct Configuration *config, const uint32_t addr
 }
 
 int dfuse_cmd_mass_erase(const struct Configuration *config) {
-    wor_bootio_constexpr__ uint8_t command[] = {0x41};
+    wor_bootio_constexpr__ uint8_t command[] = {DfuSeCommand_MassErase};
     return send_command(command, 1, config);
 }
 
 int dfuse_cmd_leave(const struct Configuration *config) {
-    wor_bootio_constexpr__ uint8_t command[] = {0x91};
+    wor_bootio_constexpr__ uint8_t command[] = {DfuSeCommand_Leave};
     return send_command(command, 1, config);
 }

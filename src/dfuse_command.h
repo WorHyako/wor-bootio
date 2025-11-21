@@ -2,8 +2,6 @@
 
 #include "configuration.h"
 
-#include <stdint.h>
-
 /**
  * \brief
  *

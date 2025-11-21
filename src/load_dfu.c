@@ -60,13 +60,11 @@ int download_dfu(const struct Configuration *config,
     size_t total_bytes = 0;
     int ec = 0;
 
-    uint32_t transfer_count = 0;
-    for (uint32_t i = 0; total_bytes < expected_size; ++i) {
+    for (uint32_t i = 0, transfer_count = 2; total_bytes < expected_size; ++i, ++transfer_count) {
         if (expected_size - total_bytes < chunk_size) {
             chunk_size = expected_size - total_bytes;
         }
         const uint8_t *buf_head = buffer + (chunk_size * i);
-        transfer_count = i + 2;
         const int bytes_sent = transfer_out(config, buf_head, chunk_size, transfer_count);
         if (bytes_sent < 0) {
             goto out;
@@ -86,8 +84,7 @@ int download_dfu(const struct Configuration *config,
     }
 
     wor_bootio_constexpr__ uint8_t terminating_byte = 0x00;
-    transfer_count++;
-    ec = transfer_out(config, &terminating_byte, 0, transfer_count);
+    ec = transfer_out(config, &terminating_byte, 0, 0);
 
     if (ec < 0) {
         return ec;

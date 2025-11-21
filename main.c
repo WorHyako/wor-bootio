@@ -1,7 +1,6 @@
 #include "load.h"
 #include "configuration.h"
 #include "dfu_file.h"
-#include "dfuse_command.h"
 #include "portable.h"
 #include "transfer.h"
 
@@ -10,6 +9,83 @@
 #include <fcntl.h>
 
 #include <libusb.h>
+
+/**
+ * \brief
+ *
+ * \param file
+ * \param path
+ * \return
+ */
+wor_bootio_nodiscard__
+static int dfu_file_read(struct DfuFile *file, const char *path) {
+    int ec;
+    uint8_t *buffer = wor_bootio_nullptr__;
+    FILE *local_file = fopen(path, "rb");
+
+    if (local_file == wor_bootio_nullptr__) {
+        ec = -1;
+        goto out;
+    }
+
+    ec = fseek(local_file, 0, SEEK_END);
+    file->size.total = ftell(local_file);
+    ec = fseek(local_file, 0, SEEK_SET);
+    if (ec != 0) {
+        goto out;
+    }
+
+    if (file->size.total > SIZE_MAX) {
+        ec = 2;
+        goto out;
+    }
+
+    buffer = calloc(file->size.total, sizeof(uint8_t));
+    const size_t read_bytes = fread(buffer, sizeof(uint8_t), file->size.total, local_file);
+    if (read_bytes != file->size.total) {
+        goto out;
+    }
+    ec = load_file(file, buffer, read_bytes);
+
+out:
+    if (buffer != wor_bootio_nullptr__) {
+        free(buffer);
+        buffer = wor_bootio_nullptr__;
+    }
+    if (local_file != wor_bootio_nullptr__) {
+        ec = fclose(local_file);
+        local_file = wor_bootio_nullptr__;
+    }
+    return ec;
+}
+
+/**
+ * \brief
+ *
+ * \param file
+ * \return
+ */
+wor_bootio_nodiscard__
+static int dfu_file_write(struct DfuFile *file) {
+    if (file == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__) {
+        return -1;
+    }
+    int ec;
+    wor_bootio_constexpr__ char mode[] = "wb";
+    FILE *out = fopen(file->path, mode);
+    if (out == wor_bootio_nullptr__) {
+        ec = remove(file->path);
+        if (ec != 0) {
+            return -1;
+        }
+        out = fopen(file->path, mode);
+        if (out == wor_bootio_nullptr__) {
+            return -1;
+        }
+    }
+    ec = (int)fwrite(file->data, sizeof(*file->data), file->size.total, out);
+    return ec;
+}
 
 /**
  * \brief
@@ -36,7 +112,7 @@ static void print_devices(struct ConfigurationNode *device_node_root) {
 }
 
 int main() {
-    libusb_context *ctx;
+    libusb_context* ctx;
     struct ConfigurationNode *confs = wor_bootio_nullptr__;
     int ec = libusb_init(&ctx);
 
@@ -79,8 +155,8 @@ int main() {
     }
     struct DfuFile file;
 
-    dfu_file_set_name(&file, "test.bin");
-    dfu_file_fill(&file, buf, bytes_count);
+    dfu_file_set_path(&file, "test.bin");
+    ec = load_file(&file, buf, bytes_count);
     ec = dfu_file_write(&file);
     if (ec < 0) {
         printf("Error to write file.\n");
