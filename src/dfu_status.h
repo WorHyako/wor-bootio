@@ -3,7 +3,8 @@
 #include <stdint.h>
 
 /**
- * \brief
+ * \enum DfuState
+ * \brief Represents all possibles states of Dfu/DfuSe protocol.
  */
 enum DfuState
 #if __STDC_VERSION__ == 202311L
@@ -24,7 +25,8 @@ enum DfuState
 };
 
 /**
- * \brief
+ * \enum DfuStatus
+ * \brief Represents all possibles statuses of Dfu/DfuSe protocol.
  */
 enum DfuStatus
 #if __STDC_VERSION__ == 202311L
@@ -52,6 +54,7 @@ enum DfuStatus
 #pragma pack(push, 1)
 
 /**
+ * \struct DeviceDfuStatus
  * \brief The device responds to the DFU_GETSTATUS request with a payload packet containing the following data.
  */
 struct DeviceDfuStatus {
@@ -60,8 +63,7 @@ struct DeviceDfuStatus {
      */
     enum DfuStatus status;
     /**
-     * \brief Minimum time, in milliseconds, that the host should wait before sending
-     * a subsequent DFU_GETSTATUS request,
+     * \brief Minimum time, in milliseconds, that the host should wait before sending a later request,
      */
     uint32_t timeout;
     /**

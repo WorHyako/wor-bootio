@@ -1,50 +1,64 @@
 #include "configuration.h"
 
+#include "bootio_error.h"
+
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <libusb.h>
 
+#if __STDC_VERSION__ == 202311L
 /**
- * \brief
+ * \brief Value from descriptor that means Dfu descriptor type.
  */
-enum {
-    /**
-     * \brief
-     */
-    DT_DFU = 0x21
-};
+static constexpr uint32_t DtType_Dfu = 0x21;
+#else
+/**
+ * \brief Value from descriptor that means Dfu descriptor type.
+ */
+#define DtType_Dfu 0x21
+#endif
 
 /**
- * \brief
+ * \brief Fills a DFU functional descriptor from a list of descriptors.
  *
- * \param desc_list
- * \param length
- * \param func_dt
+ * This function scans through a list of descriptors to find a descriptor of type \c DtType_Dfu .
+ * If a DFU functional descriptor is found, it copies the descriptor data into the provided
+ * \c DfuFunctionalDescriptor structure.
  *
- * \return
+ * \param desc_list The list of descriptors to scan. Must not be \c null .
+ * \param length The total length of the descriptor list.
+ * \param func_dt A pointer to a \c DfuFunctionalDescriptor structure where the found descriptor will be stored.
+ * \return Returns \c BootIoError_Success (0) on success if the DFU functional descriptor is found and copied.
+ *         Possible output values on failure:
+ *         - \c BootIoError_InvalidParam - \c desc_list param is empty.
+ *         - \c BootIoError_Configuration_DescriptorLength - descriptor length is too short.
+ *         - \c BootIoError_Other - can't find descriptor.
  */
 wor_bootio_nodiscard__
-static int fill_descriptor(const uint8_t *desc_list, uint8_t length, struct DfuFunctionalDescriptor *func_dt) {
-    int desc_idx = 0;
-
+static int fill_descriptor(const uint8_t *desc_list, const uint8_t length, struct DfuFunctionalDescriptor *func_dt) {
     if (length < 2) {
-        return -1;
+        return BootIoError_Configuration_DescriptorLength;
+    }
+    if (desc_list == wor_bootio_nullptr__) {
+        return BootIoError_InvalidParam;
     }
 
+    int desc_idx = 0;
     while (desc_idx + 1 < length) {
         const int current_desc_len = desc_list[desc_idx];
         if (current_desc_len == 0) {
-            return -1;
+            return BootIoError_Configuration_DescriptorLength;
         }
-        if (desc_list[desc_idx + 1] == DT_DFU) {
+        if (desc_list[desc_idx + 1] == DtType_Dfu) {
             memcpy(func_dt, desc_list + desc_idx, sizeof(struct DfuFunctionalDescriptor));
-            return 0;
+            return BootIoError_Success;
         }
         desc_idx += (int)desc_list[desc_idx];
     }
-    return -1;
+    return BootIoError_Other;
 }
 
 void free_device_tree(struct ConfigurationNode *device_node_root) {
@@ -58,8 +72,21 @@ void free_device_tree(struct ConfigurationNode *device_node_root) {
     }
 }
 
+void free_configuration(struct Configuration *config) {
+    if (config == wor_bootio_nullptr__) {
+        return;
+    }
+    free(config->alt_name);
+    free(config->serial_name);
+}
+
 struct ConfigurationNode *find_configurations(libusb_device *dev) {
     int ec;
+
+    if (dev == wor_bootio_nullptr__) {
+        return wor_bootio_nullptr__;
+    }
+
     struct libusb_device_descriptor desc;
     struct ConfigurationNode *conf_node_root = wor_bootio_nullptr__;
     struct ConfigurationNode *conf_node_head = wor_bootio_nullptr__;
@@ -69,7 +96,7 @@ struct ConfigurationNode *find_configurations(libusb_device *dev) {
     for (int cfg_idx = 0; cfg_idx < desc.bNumConfigurations; ++cfg_idx) {
         struct libusb_config_descriptor *cfg = wor_bootio_nullptr__;
         ec = libusb_get_config_descriptor(dev, cfg_idx, &cfg);
-        if (ec != LIBUSB_SUCCESS || cfg == wor_bootio_nullptr__) {
+        if (ec != BootIoError_Success || cfg == wor_bootio_nullptr__) {
             continue;
         }
 
@@ -96,10 +123,10 @@ struct ConfigurationNode *find_configurations(libusb_device *dev) {
                     goto dfu_found;
                 }
                 libusb_device_handle *dev_handle;
-                if (libusb_open(dev, &dev_handle) != LIBUSB_SUCCESS) {
+                if (libusb_open(dev, &dev_handle) != BootIoError_Success) {
                     continue;
                 }
-                ec = libusb_get_descriptor(dev_handle, DT_DFU, 0, (void *)&func_dt, sizeof(func_dt));
+                ec = libusb_get_descriptor(dev_handle, DtType_Dfu, 0, (void *)&func_dt, sizeof(func_dt));
 
                 libusb_close(dev_handle);
                 if (ec > 0) {
@@ -124,8 +151,8 @@ dfu_found:
                 continue;
             }
             for (int alt_idx = 0; alt_idx < intf->num_altsetting; ++alt_idx) {
-                unsigned char alt_name[128];
-                unsigned char serial_name[128];
+                unsigned char alt_name[126];
+                unsigned char serial_name[126];
                 const struct libusb_interface_descriptor *alt = &intf->altsetting[alt_idx];
 
                 if (alt->bInterfaceClass != 0xfe || alt->bInterfaceSubClass != 1) {
@@ -135,10 +162,10 @@ dfu_found:
                     continue;
                 }
 
-                libusb_device_handle *dev_handle;
+                libusb_device_handle *dev_handle = wor_bootio_nullptr__;
                 ec = libusb_open(dev, &dev_handle);
-                if (ec != LIBUSB_SUCCESS) {
-                    printf("Error to open device");
+                if (ec != BootIoError_Success) {
+                    ec = BootIoError_Device_Open;
                     break;
                 }
                 ec = libusb_get_string_descriptor_ascii(dev_handle,
@@ -147,8 +174,6 @@ dfu_found:
                                                         126);
                 if (alt->iInterface == 0 || ec == 0) {
                     strcpy((char *)alt_name, "unknown");
-                } else {
-                    alt_name[127] = '\0';
                 }
                 ec = libusb_get_string_descriptor_ascii(dev_handle,
                                                         desc.iSerialNumber,
@@ -156,13 +181,12 @@ dfu_found:
                                                         126);
                 if (desc.iSerialNumber == 0 || ec == 0) {
                     strcpy((char *)serial_name, "unknown");
-                } else {
-                    serial_name[127] = '\0';
                 }
                 libusb_close(dev_handle);
 
                 struct ConfigurationNode *new_node = malloc(sizeof(struct ConfigurationNode));
                 if (new_node == wor_bootio_nullptr__) {
+                    free_device_tree(conf_node_root);
                     libusb_free_config_descriptor(cfg);
                     return wor_bootio_nullptr__;
                 }
@@ -177,7 +201,9 @@ dfu_found:
                 }
 
                 struct Configuration *conf = &new_node->device;
+                conf->serial_name = calloc(126, sizeof(char));
                 strcpy(conf->serial_name, (char *)serial_name);
+                conf->alt_name = calloc(126, sizeof(char));
                 strcpy(conf->alt_name, (char *)alt_name);
                 conf->device = libusb_ref_device(dev);
                 conf->bcd_device = desc.bcdDevice;
@@ -188,7 +214,6 @@ dfu_found:
                 conf->dev_number = libusb_get_device_address(dev);
                 conf->bus_number = libusb_get_bus_number(dev);
                 conf->func_dt = func_dt;
-                conf->device_handle = dev_handle;
                 conf->max_packet_size = desc.bMaxPacketSize0;
             }
         }

@@ -1,3 +1,4 @@
+#include "bootio_error.h"
 #include "load.h"
 
 #include "memory_segment.h"
@@ -5,22 +6,31 @@
 #include "transfer.h"
 #include "portable.h"
 
+#include <assert.h>
 #include <libusb.h>
 
 /**
- * \brief
+ * \brief Erases memory pages within the specified address range.
  *
- * \param config
- * \param start_address
- * \param size
- * \return
+ * This function erases memory pages starting at the given address for the specified size.
+ * It operates on memory segments that are writable or erasable. The operation stops if
+ * the specified memory segment does not allow erasure or if any errors occur.
+ *
+ * \param config Pointer to the \c Configuration structure containing device information.
+ * \param start_address The starting address of the memory region to be erased.
+ * \param size The size of the memory region to be erased, in bytes.
+ * \return Returns \c BootIoError_Success (0) on success page erasing.
+ *         Possible output values on failure:
+ *         - \c BootIoError_Configuration_DescriptorString - can't parse descriptor.
+ *         - For other error codes see \c dfuse_cmd_erase_page(...).
  */
 wor_bootio_nodiscard__
-static int erase_pages(const struct Configuration *config, size_t start_address, size_t size) {
+static int erase_pages(const struct Configuration *config, const size_t start_address, const size_t size) {
+    assert(config != wor_bootio_nullptr__);
     struct MemorySegmentNode *segment_list = wor_bootio_nullptr__;
     int ec = parse_memory_segments(config->alt_name, &segment_list);
     if (ec < 0) {
-        return -1;
+        return BootIoError_Configuration_DescriptorString;
     }
 
     struct MemorySegmentNode *segment_node = find_segment_node(segment_list, start_address);
@@ -41,87 +51,88 @@ static int erase_pages(const struct Configuration *config, size_t start_address,
     return ec;
 }
 
-int upload_dfuse(const struct Configuration *config,
+int upload_dfuse(struct Configuration *config,
                  const uint8_t *buffer,
                  const size_t start_address,
                  const size_t expected_size,
-                 uint16_t chunk_size) {
-    if (config == wor_bootio_nullptr__ || config == wor_bootio_nullptr__ || buffer == wor_bootio_nullptr__) {
-        return LIBUSB_ERROR_OTHER;
+                 const uint16_t chunk_size) {
+    if (config == wor_bootio_nullptr__ || buffer == wor_bootio_nullptr__) {
+        return BootIoError_InvalidParam;
     }
-    struct MemorySegmentNode *segment_list = wor_bootio_nullptr__;
-    int ec = parse_memory_segments(config->alt_name, &segment_list);
+    int ec = libusb_open(config->device, &config->device_handle);
+    if (ec < 0) {
+        return ec;
+    }
 
-    if (ec != 0) {
-        return LIBUSB_ERROR_OTHER;
+    struct MemorySegmentNode *segment_list = wor_bootio_nullptr__;
+    ec = parse_memory_segments(config->alt_name, &segment_list);
+    if (ec < 0) {
+        goto out;
     }
     const struct MemorySegment *segment = find_segment(segment_list, start_address);
     if (segment == wor_bootio_nullptr__ || segment->type != MemorySegmentType_Readable) {
         free_memory_segment_list(segment_list);
-        return LIBUSB_ERROR_OTHER;
+        ec = BootIoError_Other;
+        goto out;
     }
     free_memory_segment_list(segment_list);
 
     ec = dfuse_cmd_set_address(config, start_address);
     if (ec < 0) {
-        return -1;
+        goto out;
     }
     ec = dfu_abort(config);
     if (ec < 0) {
-        return -1;
+        goto out;
     }
 
-    uint8_t *buf_head = (uint8_t *)buffer;
     size_t total_bytes = 0;
-
     for (uint16_t transfer_count = 2; total_bytes < expected_size; transfer_count++) {
-        /**
-         * TODO: maybe useless, coz `bytes < chunk_size` means end of uploading for USB device.
-         */
-        if (expected_size - total_bytes < chunk_size) {
-            chunk_size = (int)(expected_size - total_bytes);
-        }
-
+        uint8_t *buf_head = (uint8_t *)buffer + total_bytes;
         const int bytes = transfer_in(config, buf_head, chunk_size, transfer_count);
         if (bytes < 0) {
             ec = bytes;
             break;
         }
         if (bytes == 0) {
-            ec = LIBUSB_SUCCESS;
+            ec = BootIoError_Success;
             break;
         }
-        total_bytes += bytes;
-        buf_head += bytes;
 
+        total_bytes += bytes;
         if (total_bytes >= expected_size || bytes < chunk_size) {
-            ec = LIBUSB_SUCCESS;
+            ec = BootIoError_Success;
             break;
         }
     }
     if (ec < 0) {
-        return ec;
+        goto out;
     }
     ec = wait_for_download_idle(config);;
     ec = dfu_abort(config);
+out:
+    libusb_close(config->device_handle);
+    config->device_handle = wor_bootio_nullptr__;
 
     return ec < 0
                ? ec
                : (int)total_bytes;
 }
 
-int download_dfuse(const struct Configuration *config,
+int download_dfuse(struct Configuration *config,
                    struct DfuFile *file,
                    const size_t start_address,
                    uint16_t chunk_size) {
     if (config == wor_bootio_nullptr__ || file == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__) {
-        return -1;
+        return BootIoError_InvalidParam;
     }
 
+    int ec = libusb_open(config->device, &config->device_handle);
+    if (ec < 0) {
+        return ec;
+    }
     const size_t firmware_size = file->size.total - file->size.suffix - file->size.prefix;
     size_t total_bytes = 0;
-    int ec = 0;
-
     ec = erase_pages(config, start_address, firmware_size);
     if (ec < 0) {
         goto out;
@@ -166,6 +177,8 @@ int download_dfuse(const struct Configuration *config,
     ec = wait_for_manifest(config);
 
 out:
+    libusb_close(config->device_handle);
+    config->device_handle = wor_bootio_nullptr__;
     return ec < 0
                ? ec
                : (int)total_bytes;

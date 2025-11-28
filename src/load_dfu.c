@@ -1,5 +1,6 @@
 #include "load.h"
 
+#include "bootio_error.h"
 #include "transfer.h"
 #include "portable.h"
 
@@ -7,25 +8,21 @@
 
 #include <libusb.h>
 
-int upload_dfu(const struct Configuration *config,
+int upload_dfu(struct Configuration *config,
                const uint8_t *buffer,
                const size_t expected_size,
-               size_t chunk_size) {
-    if (buffer == wor_bootio_nullptr__) {
-        return LIBUSB_ERROR_OVERFLOW;
+               const size_t chunk_size) {
+    if (buffer == wor_bootio_nullptr__ || config == wor_bootio_nullptr__) {
+        return BootIoError_InvalidParam;
     }
     size_t total_bytes = 0;
-    uint8_t *buf_head = (uint8_t *)buffer;
-    int ec = 0;
 
+    int ec = libusb_open(config->device, &config->device_handle);
+    if (ec < 0) {
+        return ec;
+    }
     for (uint16_t transfer_count = 2; total_bytes < expected_size; transfer_count++) {
-        /**
-         * TODO: maybe useless, coz `bytes < chunk_size` means end of uploading for USB device.
-         */
-        if (expected_size - total_bytes < chunk_size) {
-            chunk_size = (int)(expected_size - total_bytes);
-        }
-
+        uint8_t *buf_head = (uint8_t *)buffer + total_bytes;
         const int bytes = transfer_in(config, buf_head, chunk_size, transfer_count);
 
         if (bytes < 0) {
@@ -33,33 +30,37 @@ int upload_dfu(const struct Configuration *config,
             break;
         }
 
-        buf_head += bytes;
         total_bytes += bytes;
 
-        if (total_bytes >= expected_size || bytes < chunk_size) {
-            ec = LIBUSB_SUCCESS;
+        if (bytes < chunk_size) {
+            ec = BootIoError_Success;
             break;
         }
     }
     if (ec < 0) {
-        return ec;
+        goto out;
     }
     ec = wait_for_dfu_idle(config);
+out:
+    libusb_close(config->device_handle);
+    config->device_handle = wor_bootio_nullptr__;
     return ec < 0
                ? ec
                : (int)total_bytes;
 }
 
-int download_dfu(const struct Configuration *config,
+int download_dfu(struct Configuration *config,
                  uint8_t *buffer,
                  const size_t expected_size,
                  size_t chunk_size) {
     if (buffer == wor_bootio_nullptr__ || config == wor_bootio_nullptr__) {
-        return LIBUSB_ERROR_OVERFLOW;
+        return BootIoError_InvalidParam;
     }
     size_t total_bytes = 0;
-    int ec = 0;
-
+    int ec = libusb_open(config->device, &config->device_handle);
+    if (ec < 0) {
+        return ec;
+    }
     for (uint32_t i = 0, transfer_count = 2; total_bytes < expected_size; ++i, ++transfer_count) {
         if (expected_size - total_bytes < chunk_size) {
             chunk_size = expected_size - total_bytes;
@@ -91,8 +92,9 @@ int download_dfu(const struct Configuration *config,
     }
 
     ec = wait_for_manifest(config);
-
 out:
+    libusb_close(config->device_handle);
+    config->device_handle = wor_bootio_nullptr__;
     return ec < 0
                ? ec
                : (int)total_bytes;

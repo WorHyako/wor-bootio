@@ -141,12 +141,6 @@ int main() {
         libusb_exit(ctx);
         return -1;;
     }
-    ec = libusb_open(confs->device.device, &confs->device.device_handle);
-    if (ec != LIBUSB_SUCCESS) {
-        printf("Error to open device");
-        return 1;
-    }
-
     uint8_t buf[150000];
     const int bytes_count = upload_dfuse(&confs->device, buf, 0x08001000, 150000, 1024);
     if (bytes_count < 0) {
@@ -175,7 +169,7 @@ int main() {
 
     dfu_file_free(&file);
     free_device_tree(confs);
-    libusb_close(confs->device.device_handle);
+    libusb_free_device_list(device_list, 1);
     libusb_exit(ctx);
     return 0;
 }

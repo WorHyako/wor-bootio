@@ -6,7 +6,16 @@
 #include <stdint.h>
 
 /**
- * \brief
+ * \struct Configuration
+ * \brief Holds the configuration of a USB device.
+ *
+ * This structure encapsulates various attributes required to interact with a USB device, including bus number, device
+ * identifiers, descriptors, interface numbers, and alternative settings. Additionally, it stores strings such
+ * as alternative interface name and serial name, as well as handles to device and device descriptor.
+ *
+ * \warning Field \c device_handle may be \c null, so be careful to use it.
+ * Usually it's used internally to store a device handle in downloading, uploading or parsing process.
+ * After using it will usually be closed internally also.
  */
 struct Configuration {
     /**
@@ -52,11 +61,11 @@ struct Configuration {
     /**
      * \brief Alternative interface name.
      */
-    char alt_name[128];
+    char* alt_name;
     /**
      * \brief Serial name.
      */
-    char serial_name[128];
+    char* serial_name;
     /**
      * \brief Device descriptor handle.
      */
@@ -68,32 +77,55 @@ struct Configuration {
 };
 
 /**
- * \brief
+ * \struct ConfigurationNode
+ * \brief Represents a single node in the configuration-linked list.
+ *
+ * The \c ConfigurationNode structure is used to store information about a device's configuration
+ * and provides a link to the next node in the list, forming a linked list of devices.
  */
 struct ConfigurationNode {
     /**
-     * \brief Current device info.
+     * \brief Current configuration info.
      */
     struct Configuration device;
     /**
-     * \brief Next node.
+     * \brief Pointer to the next configuration node.
      */
     struct ConfigurationNode *next;
 };
 
 /**
- * \brief
+ * \brief Frees the memory allocated for a device tree.
  *
- * \param device_node_root
+ * This function releases the memory associated with a device tree node and all its later nodes in a linked list.
+ *
+ * \param device_node_root A pointer to the root node of the device tree to be freed.
+ *                         If this pointer is \c null, the function does nothing.
  */
 void free_device_tree(struct ConfigurationNode *device_node_root);
 
 /**
- * \brief
+ * \brief Frees allocated resources in a \c Configuration structure.
  *
- * \param dev
+ * This function releases all dynamically allocated memory associated with
+ * the provided \c Configuration structure, specifically \c alt_name and \c serial_name.
  *
- * \return
+ * \param config A pointer to the \c Configuration structure whose resources are to be freed.
+ *               If this pointer is \c null, the function will immediately return.
+ */
+void free_configuration(struct Configuration *config);
+
+/**
+ * \brief Finds and retrieves the configurations available for a given USB device.
+ *
+ * This function examines the configurations of a specific USB device to build a linked list of configurations.
+ * It processes configuration descriptors, interface descriptors, and DFU functional descriptors where applicable.
+ *
+ * \param dev A pointer to the \c libusb_device that represents the USB device
+ *            whose configurations are to be retrieved.
+ * \return A pointer to the root of a linked list of \c ConfigurationNode structures
+ *         representing the configurations of the device.
+ *         Returns \c null if the input device is \c null or if an error occurs.
  */
 wor_bootio_nodiscard__
 struct ConfigurationNode *find_configurations(struct libusb_device *dev);

@@ -24,9 +24,13 @@ static_assert(false, "Only MSVC (C17) and LLVM Clang (C17/C23) compilers are sup
 #endif
 
 /**
- * \brief
+ * \brief Pauses the execution of the current thread for the specified duration, in milliseconds.
  *
- * \param milliseconds
+ * The method provides a cross-platform implementation using appropriate APIs
+ * depending on the platform. On Windows, the Sleep function is used. On non-Windows
+ * platforms, nanosleep is used for precise timing.
+ *
+ * \param milliseconds The number of milliseconds to sleep.
  */
 static void wor_bootio_sleep_ms(const uint32_t milliseconds) {
 #ifdef WIN32

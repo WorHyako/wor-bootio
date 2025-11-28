@@ -1,5 +1,6 @@
 #include "dfuse_command.h"
 
+#include "bootio_error.h"
 #include "transfer.h"
 #include "dfu_status.h"
 #include "portable.h"
@@ -7,7 +8,8 @@
 #include <libusb.h>
 
 /**
- * \brief
+ * \enum DfuSeCommand
+ * \brief Contains DfuSe special commands.
  */
 enum DfuSeCommand
 #if __STDC_VERSION__ == 202311L
@@ -15,44 +17,55 @@ enum DfuSeCommand
 #endif
     {
     /**
-     * \brief
+     * \brief Set address.
      */
     DfuSeCommand_SetAddress = 0x21,
     /**
-     * \brief
+     * \brief Erase page (use with address).
      */
     DfuSeCommand_ErasePage = 0x41,
     /**
-     * \brief
+     * \brief Mass flash erasing (use with no address).
      */
     DfuSeCommand_MassErase = 0x41,
     /**
-     * \brief
+     * \brief Leave dfu mode and return to application mode.
      */
     DfuSeCommand_Leave = 0x91
 };
 
-/**
- * \brief
-*/
 #if __STDC_VERSION__ == 202311L
+/**
+ * \brief Max count of trying to receive the status answer.
+*/
 constexpr uint8_t timeout_number = 2;
 #else
+/**
+ * \brief Max count of trying to receive the status answer.
+*/
 #define timeout_number 2
 #endif
 
 /**
- * \brief
+ * \brief Sends a command to the device using the provided configuration.
  *
- * \param command
- * \param length
- * \param config
- * \return
+ * This function sends a specific command to the device and manages the
+ * resulting status and state transitions. It handles retries and ensures
+ * proper synchronization before returning the result.
+ *
+ * \param command Pointer to the command data to be sent to the device.
+ * \param length Length of the command data in bytes.
+ * \param config Pointer to the device \c Configuration structure.
+ * \return Returns \c BootIoError_Success (0) on success.
+ *         Possible output on failure:
+ *         - \c BootIoError_InvalidParam - \c config is \c null.
+ *         - \c BootIoError_Transfer_Pipe - device falls in error.
+ *         - \c BootIoError_Transfer_ - transfer error.
  */
 wor_bootio_nodiscard__
 static int send_command(const uint8_t *command, const uint8_t length, const struct Configuration *config) {
     if (config == wor_bootio_nullptr__) {
-        return -1;
+        return BootIoError_InvalidParam;
     }
 
     int ec = transfer_out(config, command, length, 0);
@@ -68,7 +81,7 @@ static int send_command(const uint8_t *command, const uint8_t length, const stru
         ec = get_status(config, &status);
         if (ec >= 0) {
             timeout = status.timeout;
-        } else if (ec == LIBUSB_ERROR_PIPE && timeout_count < timeout_number) {
+        } else if (ec == BootIoError_Transfer_Pipe && timeout_count < timeout_number) {
             status.state = DfuState_DownloadBusy;
             timeout = 1;
         }
@@ -79,7 +92,7 @@ static int send_command(const uint8_t *command, const uint8_t length, const stru
     } while (status.state != DfuState_DownloadIdle && ++timeout_count < timeout_number);
 
     if (status.status != DfuStatus_Ok) {
-        return LIBUSB_ERROR_PIPE;
+        return BootIoError_Transfer_Pipe;
     }
     return ec;
 }

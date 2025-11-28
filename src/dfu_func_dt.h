@@ -3,7 +3,8 @@
 #include <stdint.h>
 
 /**
- * \brief
+ * \enum DfuFuncDtAttributes
+ * \brief Contains flags of functional descriptor's attributes.
  */
 enum DfuFuncDtAttributes
 #if __STDC_VERSION__ == 202311L
@@ -21,7 +22,8 @@ enum DfuFuncDtAttributes
 };
 
 /**
- * \brief
+ * \struct DfuFunctionalDescriptor
+ * \brief Represents functional descriptor of the usb device.
  *
  * See https://docs.kernel.org/usb/functionfs-desc.html.
  */

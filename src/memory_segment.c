@@ -1,12 +1,16 @@
 #include "memory_segment.h"
 
+#include "bootio_error.h"
+#include "portable.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "portable.h"
-
 int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **segment_list) {
+    if (descriptor == wor_bootio_nullptr__) {
+        return BootIoError_InvalidParam;
+    }
     struct MemorySegmentNode *segment_list_head = *segment_list;
     int scanf_idx;
     int ec;
@@ -22,7 +26,7 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
     ec = sscanf(descriptor, "@%[^/]%n", name, &scanf_idx);
     if (ec < 1) {
         free(name);
-        return -1;
+        return BootIoError_Configuration_DescriptorString;
     }
 
     descriptor += scanf_idx;
@@ -77,7 +81,7 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
     }
     free(name);
 
-    return 0;
+    return BootIoError_Success;
 }
 
 void free_memory_segment_list(struct MemorySegmentNode *segment_list) {
@@ -90,17 +94,14 @@ void free_memory_segment_list(struct MemorySegmentNode *segment_list) {
 }
 
 struct MemorySegment *find_segment(struct MemorySegmentNode *segment_list, const uint32_t address) {
-    while (segment_list->next != wor_bootio_nullptr__) {
-        if (address >= segment_list->memory_segment.distance.start
-            && address <= segment_list->memory_segment.distance.end) {
-            return &segment_list->memory_segment;
-        }
-        segment_list = segment_list->next;
-    }
-    return wor_bootio_nullptr__;
+    struct MemorySegmentNode* node = find_segment_node(segment_list, address);
+    return node == wor_bootio_nullptr__ ? wor_bootio_nullptr__ : &node->memory_segment;
 }
 
 struct MemorySegmentNode *find_segment_node(struct MemorySegmentNode *segment_list, const uint32_t address) {
+    if (segment_list == wor_bootio_nullptr__) {
+        return wor_bootio_nullptr__;
+    }
     while (segment_list->next != wor_bootio_nullptr__) {
         if (address >= segment_list->memory_segment.distance.start
             && address <= segment_list->memory_segment.distance.end) {
