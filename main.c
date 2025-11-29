@@ -1,7 +1,4 @@
 #include "load.h"
-#include "configuration.h"
-#include "dfu_file.h"
-#include "portable.h"
 
 #include <stdlib.h>
 #include <stdio.h>
