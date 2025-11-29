@@ -4,6 +4,8 @@ project(wor-bootio
         LANGUAGES C
         VERSION 0.0.0)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(PkgConfig)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(TargetStaticAnalyze)
@@ -33,6 +35,7 @@ set(Sources
         src/dfu_file.c
         src/configuration.c
         src/transfer.c
+        src/dfu_status.c
         src/load_dfu.c
         src/load_dfuse.c
         src/crc32.c
@@ -43,7 +46,7 @@ target_sources(wor_bootio
         PRIVATE ${Sources})
 
 target_include_directories(wor_bootio
-        PUBLIC src)
+        PUBLIC include)
 
 target_link_libraries(wor_bootio
         PUBLIC

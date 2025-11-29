@@ -31,6 +31,15 @@ static constexpr uint8_t DfuPrefixSize = 8;
 #endif
 
 /**
+ * \brief Shortcut to assert \c DfuFile and dfu file's \c data
+ *
+ * \param file \c DfuFile pointer
+ */
+#define assert_file(file) \
+assert(file != wor_bootio_nullptr__);\
+assert(file->data != wor_bootio_nullptr__)
+
+/**
  * \brief Fills the given \c DfuFile structure with the provided data and size.
  *
  * This function assigns the provided data pointer and size to the
@@ -43,8 +52,7 @@ static constexpr uint8_t DfuPrefixSize = 8;
  * \param size Total size of the data buffer.
  */
 static void dfu_file_fill(struct DfuFile *file, const uint8_t *data, const size_t size) {
-    assert(file != wor_bootio_nullptr__);
-    assert(data != wor_bootio_nullptr__);
+    assert_file(file);
     if (size == 0) {
         return;
     }
@@ -68,8 +76,7 @@ static void dfu_file_fill(struct DfuFile *file, const uint8_t *data, const size_
  */
 wor_bootio_nodiscard__
 static int parse_dfu_suffix(struct DfuFile *file) {
-    assert(file != wor_bootio_nullptr__);
-    assert(file->data != wor_bootio_nullptr__);
+    assert_file(file);
     int ec = BootIoError_Success;
     if (file->size.total < DfuSuffixSize) {
         ec = BootIoError_InvalidParam;
@@ -131,8 +138,7 @@ static int parse_dfu_suffix(struct DfuFile *file) {
  */
 wor_bootio_nodiscard__
 static int parse_dfu_prefix(struct DfuFile *file) {
-    assert(file != wor_bootio_nullptr__);
-    assert(file->data != wor_bootio_nullptr__);
+    assert_file(file);
     int ec = 0;
     if (file->size.total < DfuPrefixSize) {
         ec = BootIoError_InvalidParam;
@@ -171,7 +177,7 @@ static int parse_dfu_prefix(struct DfuFile *file) {
 wor_bootio_nodiscard__
 static int parse_raw_data(struct DfuFile *file, const uint8_t *data, const size_t size) {
     assert(data != wor_bootio_nullptr__);
-    assert(file != wor_bootio_nullptr__);
+    assert_file(file);
     dfu_file_fill(file, data, size);
     const int ec_suffix = parse_dfu_suffix(file) == 0;
     const int ec_prefix = parse_dfu_prefix(file) == 0;

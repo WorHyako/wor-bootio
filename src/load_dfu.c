@@ -2,6 +2,7 @@
 
 #include "bootio_error.h"
 #include "transfer.h"
+#include "dfu_status.h"
 #include "portable.h"
 
 #include <stdlib.h>

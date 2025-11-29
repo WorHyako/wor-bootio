@@ -5,8 +5,16 @@
 /**
  * "Copyright (C) 1986 Gary S. Brown. You may use this program, or code or
  * tables extracted from it, as desired without restriction."
+ * Precomputed CRC32 lookup table used for efficient CRC32 checksum computation.
  *
- * \brief
+ * This table contains 256 entries, each representing the CRC32 value for a possible
+ * 8-bit input byte. It is utilized in CRC computation to quickly derive the next
+ * CRC value by indexing this table with a combination of the current accumulator
+ * state and the input byte. This improves performance by avoiding bit-wise operations
+ * for each step of the CRC calculation.
+ *
+ * \note The values in this table are generated based on the CRC32 polynomial
+ *       (0xEDB88320 reversed representation).
  */
 static wor_bootio_constexpr__ uint32_t crc32_table[] = {
     0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
@@ -54,12 +62,11 @@ static wor_bootio_constexpr__ uint32_t crc32_table[] = {
     0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d };
 
 /**
- * \brief
+ * Computes the CRC32 value for a single byte.
  *
- * \param accum
- * \param delta
- *
- * \return
+ * \param accum The current accumulator value of the CRC computation.
+ * \param delta The input byte to be processed.
+ * \return The updated CRC32 accumulator value after processing the input byte.
  */
 wor_bootio_nodiscard__
 static uint32_t crc32_byte(const uint32_t accum, const uint8_t delta) {

@@ -1,9 +1,9 @@
 #pragma once
 
+#include "configuration.h"
+
 #include <stddef.h>
 #include <stdint.h>
-
-#include "configuration.h"
 
 #pragma pack(push, 1)
 

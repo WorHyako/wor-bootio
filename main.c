@@ -2,7 +2,6 @@
 #include "configuration.h"
 #include "dfu_file.h"
 #include "portable.h"
-#include "transfer.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -112,16 +111,22 @@ static void print_devices(struct ConfigurationNode *device_node_root) {
 }
 
 int main() {
-    libusb_context* ctx;
+    /**
+     * LibUsb initialization.
+     */
+    libusb_context* ctx = wor_bootio_nullptr__;
     struct ConfigurationNode *confs = wor_bootio_nullptr__;
     int ec = libusb_init(&ctx);
 
     if (ec) {
         const char *error = libusb_error_name(ec);
-        printf("Error initializing libusb: %s\n", error);
+        printf("Error on initializing libusb: %s\n", error);
         exit(1);
     }
 
+    /**
+     * Device enumeration
+     */
     ssize_t device_num = 0;
     libusb_device **device_list;
     device_num = libusb_get_device_list(ctx, &device_list);
@@ -141,6 +146,9 @@ int main() {
         libusb_exit(ctx);
         return -1;;
     }
+    /**
+     * Firmware uploading
+     */
     uint8_t buf[150000];
     const int bytes_count = upload_dfuse(&confs->device, buf, 0x08001000, 150000, 1024);
     if (bytes_count < 0) {
@@ -156,6 +164,9 @@ int main() {
         printf("Error to write file.\n");
     }
 
+    /**
+     * Firmware downloading
+     */
     ec = download_dfuse(&confs->device, &file, 0x8001000, 1024);
 
     /**
@@ -163,10 +174,13 @@ int main() {
      */
     const int manifest_tolerant = confs->device.func_dt.attributes & DfuFuncDtAttributes_ManifestTolerant;
     if (manifest_tolerant) {
-        ec = dfu_detach(&confs->device, 100);
+        // ec = dfu_detach(&confs->device, 100);
         ec = libusb_reset_device(confs->device.device_handle);
     }
 
+    /**
+     * Dealloc all resources
+     */
     dfu_file_free(&file);
     free_device_tree(confs);
     libusb_free_device_list(device_list, 1);

@@ -4,6 +4,7 @@
 #include "memory_segment.h"
 #include "dfuse_command.h"
 #include "transfer.h"
+#include "dfu_status.h"
 #include "portable.h"
 
 #include <assert.h>

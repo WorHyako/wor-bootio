@@ -1,12 +1,12 @@
 #pragma once
 
-#if __STDC_VERSION__ == 201710L
+#if __STDC_VERSION__ < 202311L
 
 #define wor_bootio_nodiscard__
 #define wor_bootio_constexpr__ const
 #define wor_bootio_nullptr__ NULL
 
-#elif __STDC_VERSION__ == 202311L
+#elif __STDC_VERSION__ >= 202311L
 
 #define wor_bootio_nodiscard__ [[nodiscard]]
 #define wor_bootio_constexpr__ constexpr

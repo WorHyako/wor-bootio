@@ -40,7 +40,7 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
                            &page_size,
                            &segment_size_type,
                            &segment_type,
-                           &scanf_idx), ec > 0) {
+                           &scanf_idx), ec > 4) {
             descriptor += scanf_idx;
             switch (segment_size_type) {
             case 'B':

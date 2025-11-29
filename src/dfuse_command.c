@@ -5,6 +5,7 @@
 #include "dfu_status.h"
 #include "portable.h"
 
+#include <assert.h>
 #include <libusb.h>
 
 /**
@@ -49,25 +50,20 @@ constexpr uint8_t timeout_number = 2;
 /**
  * \brief Sends a command to the device using the provided configuration.
  *
- * This function sends a specific command to the device and manages the
- * resulting status and state transitions. It handles retries and ensures
- * proper synchronization before returning the result.
+ * This function sends a specific command to the device and manages the resulting status and state transitions.
+ * It handles retries and ensures proper synchronization before returning the result.
  *
  * \param command Pointer to the command data to be sent to the device.
  * \param length Length of the command data in bytes.
  * \param config Pointer to the device \c Configuration structure.
  * \return Returns \c BootIoError_Success (0) on success.
  *         Possible output on failure:
- *         - \c BootIoError_InvalidParam - \c config is \c null.
  *         - \c BootIoError_Transfer_Pipe - device falls in error.
  *         - \c BootIoError_Transfer_ - transfer error.
  */
 wor_bootio_nodiscard__
 static int send_command(const uint8_t *command, const uint8_t length, const struct Configuration *config) {
-    if (config == wor_bootio_nullptr__) {
-        return BootIoError_InvalidParam;
-    }
-
+    assert(config != wor_bootio_nullptr__);
     int ec = transfer_out(config, command, length, 0);
     if (ec < 0) {
         return ec;

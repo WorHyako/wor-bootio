@@ -10,7 +10,6 @@
  * \return Returns \c BootIoError_Success (0) on success.
  *         Possible output on failure:
  *         - \c BootIoError_Transfer_Pipe - can't check status after command executing.
- *         - \c BootIoError_InvalidParam - possible empty config.
  *         - \c BootIoError_Transfer_ - transfer error.
  */
 wor_bootio_nodiscard__
@@ -24,7 +23,6 @@ int dfuse_cmd_set_address(const struct Configuration *config, uint32_t address);
  * \return Returns \c BootIoError_Success (0) on success.
  *         Possible output on failure:
  *         - \c BootIoError_Transfer_Pipe - can't check status after command executing.
- *         - \c BootIoError_InvalidParam - possible empty config.
  *         - \c BootIoError_Transfer_ - transfer error.
  */
 wor_bootio_nodiscard__
@@ -37,7 +35,6 @@ int dfuse_cmd_erase_page(const struct Configuration *config, uint32_t address);
  * \return Returns \c BootIoError_Success (0) on success.
  *         Possible output on failure:
  *         - \c BootIoError_Transfer_Pipe - can't check status after command executing.
- *         - \c BootIoError_InvalidParam - possible empty config.
  *         - \c BootIoError_Transfer_ - transfer error.
  */
 wor_bootio_nodiscard__
@@ -50,7 +47,6 @@ int dfuse_cmd_mass_erase(const struct Configuration *config);
  * \return Returns \c BootIoError_Success (0) on success.
  *         Possible output on failure:
  *         - \c BootIoError_Transfer_Pipe - can't check status after command executing.
- *         - \c BootIoError_InvalidParam - possible empty config.
  *         - \c BootIoError_Transfer_ - transfer error.
  */
 wor_bootio_nodiscard__
