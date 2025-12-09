@@ -82,6 +82,10 @@ struct DeviceDfuStatus {
 
 #pragma pack(pop)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief Waits for the device to enter the DFU Download Idle state.
  *
@@ -169,3 +173,7 @@ int get_status(const struct Configuration *config, struct DeviceDfuStatus *statu
  */
 wor_bootio_nodiscard__
 int dfu_clear_status(const struct Configuration *config);
+
+#ifdef __cplusplus
+}
+#endif

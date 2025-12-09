@@ -61,11 +61,11 @@ struct Configuration {
     /**
      * \brief Alternative interface name.
      */
-    char* alt_name;
+    char *alt_name;
     /**
      * \brief Serial name.
      */
-    char* serial_name;
+    char *serial_name;
     /**
      * \brief Device descriptor handle.
      */
@@ -93,6 +93,10 @@ struct ConfigurationNode {
      */
     struct ConfigurationNode *next;
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * \brief Frees the memory allocated for a device tree.
@@ -129,3 +133,7 @@ void free_configuration(struct Configuration *config);
  */
 wor_bootio_nodiscard__
 struct ConfigurationNode *find_configurations(struct libusb_device *dev);
+
+#ifdef __cplusplus
+}
+#endif

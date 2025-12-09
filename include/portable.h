@@ -23,6 +23,10 @@ static_assert(false, "Only MSVC (C17) and LLVM Clang (C17/C23) compilers are sup
 #include <unistd.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief Pauses the execution of the current thread for the specified duration, in milliseconds.
  *
@@ -42,3 +46,7 @@ static void wor_bootio_sleep_ms(const uint32_t milliseconds) {
     nanosleep(&ts, wor_bootio_nullptr__);
 #endif
 }
+
+#ifdef __cplusplus
+}
+#endif

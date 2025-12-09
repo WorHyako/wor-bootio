@@ -5,6 +5,10 @@
 
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief Uploads firmware to a device using DFU protocol.
  *
@@ -104,3 +108,7 @@ int download_dfuse(struct Configuration *config,
                    struct DfuFile *file,
                    size_t start_address,
                    uint16_t chunk_size);
+
+#ifdef __cplusplus
+}
+#endif

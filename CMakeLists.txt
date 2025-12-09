@@ -50,7 +50,8 @@ set(PublicHeaders
         include/dfu_func_dt.h
         include/dfu_status.h
         include/dfuse_file.h
-        include/load.h)
+        include/load.h
+        include/portable.h)
 
 set(PrivateHeaders
         src/crc32.h

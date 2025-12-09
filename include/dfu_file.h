@@ -85,6 +85,10 @@ struct DfuFile {
 
 #pragma pack(pop)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief Loads firmware data into a DFU file structure from the raw buffer.
  *
@@ -126,3 +130,7 @@ void dfu_file_free(struct DfuFile *file);
  * \param path A string containing the new file path.
  */
 void dfu_file_set_path(struct DfuFile *file, const char *path);
+
+#ifdef __cplusplus
+}
+#endif
