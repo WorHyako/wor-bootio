@@ -12,12 +12,13 @@
 #define wor_bootio_constexpr__ constexpr
 #define wor_bootio_nullptr__ nullptr
 
-#elif
+#else
 static_assert(false, "Only MSVC (C17) and LLVM Clang (C17/C23) compilers are supported.")
 #endif
 
 #if defined(_MSC_VER)
 #include <Windows.h>
+#include <stdint.h>
 #elif defined(__clang__)
 #include <time.h>
 #include <unistd.h>
@@ -36,7 +37,7 @@ extern "C" {
  *
  * \param milliseconds The number of milliseconds to sleep.
  */
-static void wor_bootio_sleep_ms(const uint32_t milliseconds) {
+inline void wor_bootio_sleep_ms(const uint32_t milliseconds) {
 #ifdef WIN32
     Sleep(milliseconds);
 #else
