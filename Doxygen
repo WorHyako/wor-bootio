@@ -1,0 +1,28 @@
+PROJECT_NAME           = "wor-bootio"
+PROJECT_BRIEF          = "DFU/DFUse transfer library"
+OUTPUT_DIRECTORY       = docs
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+
+INPUT                  = include src
+FILE_PATTERNS          = *.h *.c
+RECURSIVE              = YES
+
+HAVE_DOT               = YES
+DOT_PATH               = /usr/local/bin
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO
+
+GENERATE_TREEVIEW      = YES
+HTML_DYNAMIC_MENUS     = YES
+
+USE_MDFILE_AS_MAINPAGE = README.md
+
+OPTIMIZE_OUTPUT_FOR_C  = YES
+EXTRACT_LOCAL_METHODS  = YES

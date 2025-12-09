@@ -9,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(PkgConfig)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(TargetStaticAnalyze)
+include(ThirdPartyDeps)
 
 # ---------- #
 #   libusb   #
@@ -42,11 +43,38 @@ set(Sources
         src/memory_segment.c
         src/dfuse_command.c)
 
+set(PublicHeaders
+        include/bootio_error.h
+        include/configuration.h
+        include/dfu_file.h
+        include/dfu_func_dt.h
+        include/dfu_status.h
+        include/dfuse_file.h
+        include/load.h)
+
+set(PrivateHeaders
+        src/crc32.h
+        src/dfuse_command.h
+        src/memory_segment.h
+        src/transfer.h)
+
 target_sources(wor_bootio
-        PRIVATE ${Sources})
+        PRIVATE
+        ${Sources}
+        PRIVATE
+        FILE_SET private_headers
+        TYPE HEADERS
+        FILES ${PrivateHeaders}
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        PUBLIC
+        FILE_SET public_headers
+        TYPE HEADERS
+        FILES ${PublicHeaders}
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_include_directories(wor_bootio
-        PUBLIC include)
+        PUBLIC include
+        PRIVATE src)
 
 target_link_libraries(wor_bootio
         PUBLIC
@@ -66,3 +94,6 @@ add_executable(wor_bootio-example main.c)
 target_link_libraries(wor_bootio-example
         PRIVATE
         Wor::BootIo)
+
+enable_testing()
+add_subdirectory(tests)

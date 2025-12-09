@@ -1,0 +1,24 @@
+:cmock:
+  :mock_prefix: mock_
+  :mock_path: "mocks"
+  :includes:
+    - "unity.h"
+  :treat_as:
+    libusb_device: void*
+    libusb_device_handle: void*
+    libusb_transfer: void*
+  :plugins:
+    - :ignore
+    - :callback
+    - :expect_any_args
+    - :ignore_arg
+    - :array
+    - :return_thru_ptr
+  :strippables:
+    - __attribute__((unused))
+    - wor_bootio_nodiscard__
+  :verbosity: 3
+  :when_ptr: :smart
+  :enforce_strict_ordering: TRUE
+  :includes_c_pre_header:
+    - libusb.h

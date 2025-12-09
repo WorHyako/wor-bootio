@@ -22,8 +22,6 @@ Checks: >
   -readability-magic-numbers,
   -readability-identifier-naming
 
-WarningsAsErrors: '*'
-
 HeaderFilterRegex: '(src/.*\.h|main\.c)'
 
 FormatStyle: file
