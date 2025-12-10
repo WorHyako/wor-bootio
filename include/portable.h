@@ -13,19 +13,20 @@
 #define wor_bootio_nullptr__ nullptr
 
 #else
-static_assert(false, "Only MSVC (C17) and LLVM Clang (C17/C23) compilers are supported.")
+#error "Only MSVC (C17) and LLVM Clang (C17/C23) compilers are supported."
 #endif
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #include <Windows.h>
 #include <stdint.h>
-#elif defined(__clang__)
+#elifdef __clang__
 #include <time.h>
 #include <unistd.h>
 #endif
 
 #ifdef __cplusplus
 extern "C" {
+
 #endif
 
 /**
