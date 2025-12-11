@@ -35,9 +35,17 @@ static constexpr uint8_t DfuPrefixSize = 8;
  *
  * \param file \c DfuFile pointer
  */
-#define assert_file(file) \
+#define assert_file_data(file) \
 assert(file != wor_bootio_nullptr__);\
 assert(file->data != wor_bootio_nullptr__)
+
+/**
+ * \brief Shortcut to assert \c DfuFile
+ *
+ * \param file \c DfuFile pointer
+ */
+#define assert_file(file) \
+assert(file != wor_bootio_nullptr__);
 
 /**
  * \brief Fills the given \c DfuFile structure with the provided data and size.
@@ -53,12 +61,16 @@ assert(file->data != wor_bootio_nullptr__)
  */
 static void dfu_file_fill(struct DfuFile *file, const uint8_t *data, const size_t size) {
     assert_file(file);
-    if (size == 0) {
+    if (file->data != wor_bootio_nullptr__) {
+        free((char *)file->data);
+        file->data = wor_bootio_nullptr__;
+    }
+    file->data = malloc(size * sizeof(uint8_t));
+    memcpy(file->data, data, size);
+    if (file->data == wor_bootio_nullptr__) {
         return;
     }
-    file->data = (uint8_t *)data;
     file->size.total = size;
-    data = wor_bootio_nullptr__;
 }
 
 /**
@@ -76,7 +88,7 @@ static void dfu_file_fill(struct DfuFile *file, const uint8_t *data, const size_
  */
 wor_bootio_nodiscard__
 static int parse_dfu_suffix(struct DfuFile *file) {
-    assert_file(file);
+    assert_file_data(file);
     int ec = BootIoError_Success;
     if (file->size.total < DfuSuffixSize) {
         ec = BootIoError_InvalidParam;
@@ -134,12 +146,12 @@ static int parse_dfu_suffix(struct DfuFile *file) {
  * \return Returns \c BootIoError_Success (0) on success.
  *         Possible output on failure:
  *         - \c BootIoError_InvalidParam - total file size less than min DFU prefix length.
- *         - \c BootIoError_File - prefix parsing error.
+ *         - \c BootIoError_File_PrefixType - prefix parsing error.
  */
 wor_bootio_nodiscard__
 static int parse_dfu_prefix(struct DfuFile *file) {
-    assert_file(file);
-    int ec = 0;
+    assert_file_data(file);
+    int ec = BootIoError_Success;
     if (file->size.total < DfuPrefixSize) {
         ec = BootIoError_InvalidParam;
         return ec;
@@ -155,7 +167,7 @@ static int parse_dfu_prefix(struct DfuFile *file) {
         uint16_t address;
         memcpy(&address, file->data + 2, sizeof(uint16_t));
         file->dfu_prefix.address = address * 1024;
-        ec = 0;
+        ec = BootIoError_Success;
     } else {
         ec = BootIoError_File_PrefixType;
     }
@@ -172,25 +184,25 @@ static int parse_dfu_prefix(struct DfuFile *file) {
  * \param data A pointer to the raw data buffer. Must not be \c null.
  * \param size The size of the raw data buffer. Must be non-zero.
  * \return Returns \c BootIoError_Success (0) on success.
- *         - For possible output on failure see \c parse_dfu_suffix(...) and \c parse_dfu_prefix(...).
+ *         - \c BootIoError_Other - Error of dfu file's data buffer
+ *         - For other possible output on failure see \c parse_dfu_suffix(...) and \c parse_dfu_prefix(...).
  */
 wor_bootio_nodiscard__
 static int parse_raw_data(struct DfuFile *file, const uint8_t *data, const size_t size) {
     assert(data != wor_bootio_nullptr__);
     assert_file(file);
     dfu_file_fill(file, data, size);
+    if (file->size.total == 0) {
+        return BootIoError_Other;
+    }
     const int ec_suffix = parse_dfu_suffix(file) == 0;
     const int ec_prefix = parse_dfu_prefix(file) == 0;
     return ec_suffix == 0 ? ec_prefix : ec_suffix;
 }
 
-int load_file(struct DfuFile *file, uint8_t *data, const size_t size) {
+int load_file(struct DfuFile *file, const uint8_t *data, const size_t size) {
     if (file == wor_bootio_nullptr__ || data == wor_bootio_nullptr__ || size == 0) {
         return BootIoError_InvalidParam;
-    }
-    if (file->data != wor_bootio_nullptr__) {
-        file->data = wor_bootio_nullptr__;
-        free((char *)file->data);
     }
     file->size.total = 0;
     file->size.suffix = 0;

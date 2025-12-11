@@ -77,12 +77,12 @@ void free_configuration(struct Configuration *config) {
         return;
     }
     free(config->alt_name);
+    config->alt_name = wor_bootio_nullptr__;
     free(config->serial_name);
+    config->serial_name = wor_bootio_nullptr__;
 }
 
 struct ConfigurationNode *find_configurations(libusb_device *dev) {
-    int ec;
-
     if (dev == wor_bootio_nullptr__) {
         return wor_bootio_nullptr__;
     }
@@ -94,6 +94,7 @@ struct ConfigurationNode *find_configurations(libusb_device *dev) {
     libusb_get_device_descriptor(dev, &desc);
 
     for (int cfg_idx = 0; cfg_idx < desc.bNumConfigurations; ++cfg_idx) {
+        int ec;
         struct libusb_config_descriptor *cfg = wor_bootio_nullptr__;
         ec = libusb_get_config_descriptor(dev, cfg_idx, &cfg);
         if (ec != BootIoError_Success || cfg == wor_bootio_nullptr__) {
@@ -122,7 +123,7 @@ struct ConfigurationNode *find_configurations(libusb_device *dev) {
                 if (ec == 0) {
                     goto dfu_found;
                 }
-                libusb_device_handle *dev_handle;
+                libusb_device_handle *dev_handle = wor_bootio_nullptr__;
                 if (libusb_open(dev, &dev_handle) != BootIoError_Success) {
                     continue;
                 }

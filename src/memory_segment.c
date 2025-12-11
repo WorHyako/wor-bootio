@@ -40,7 +40,7 @@ int parse_memory_segments(const char *descriptor, struct MemorySegmentNode **seg
                            &page_size,
                            &segment_size_type,
                            &segment_type,
-                           &scanf_idx), ec > 4) {
+                           &scanf_idx), ec == 4) {
             descriptor += scanf_idx;
             switch (segment_size_type) {
             case 'B':
@@ -88,7 +88,6 @@ void free_memory_segment_list(struct MemorySegmentNode *segment_list) {
     while (segment_list != wor_bootio_nullptr__) {
         struct MemorySegmentNode *next = segment_list->next;
         free(segment_list);
-        segment_list = wor_bootio_nullptr__;
         segment_list = next;
     }
 }

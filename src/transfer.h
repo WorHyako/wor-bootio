@@ -47,7 +47,7 @@ int transfer_out(const struct Configuration *config,
  *         - \c BootIoError_Transfer_ - transfer error.
  */
 wor_bootio_nodiscard__
-int transfer_status(const struct Configuration *config, uint8_t *buffer);
+int transfer_status(const struct Configuration *config, const uint8_t *buffer);
 
 /**
  * \brief Sends a USB DFU abort command to cancel the current operation.

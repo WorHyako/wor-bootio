@@ -103,11 +103,10 @@ extern "C" {
  *         - \c BootIoError_InvalidParam - wrong parameters.
  *         - \c BootIoError_File_ - file parsing errors.
  *
- * \warning Param \c data will be set to \c null during loading.
- * \warning Must call \c dfu_file_free after work with \c DfuFile.
+ * \warning Must to call \c dfu_file_free after work with \c DfuFile.
  */
 wor_bootio_nodiscard__
-int load_file(struct DfuFile *file, uint8_t *data, size_t size);
+int load_file(struct DfuFile *file, const uint8_t *data, size_t size);
 
 /**
  * \brief Frees resources associated with a \c DfuFile object.

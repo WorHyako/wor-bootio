@@ -117,7 +117,7 @@ int get_status(const struct Configuration *config, struct DeviceDfuStatus *statu
     if (config == wor_bootio_nullptr__) {
         return BootIoError_InvalidParam;
     }
-    uint8_t buffer[6] = { 0x00, 0x00, 0x00, 0x00, DfuState_Error, 0x00 };
+    wor_bootio_constexpr__ uint8_t buffer[6] = { 0x00, 0x00, 0x00, 0x00, DfuState_Error, 0x00 };
     const int ec = transfer_status(config, buffer);
     if (ec < 0) {
         return ec;

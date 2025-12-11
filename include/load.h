@@ -105,7 +105,7 @@ int upload_dfuse(struct Configuration *config,
  */
 wor_bootio_nodiscard__
 int download_dfuse(struct Configuration *config,
-                   struct DfuFile *file,
+                   const struct DfuFile *file,
                    size_t start_address,
                    uint16_t chunk_size);
 

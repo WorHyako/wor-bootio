@@ -56,6 +56,7 @@ int transfer_in(const struct Configuration *config,
                 const uint16_t chunk_size,
                 const uint16_t transfer_count) {
     assert_config(config);
+    assert(buf != wor_bootio_nullptr__);
     return libusb_control_transfer(config->device_handle,
                                    LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS |
                                    LIBUSB_RECIPIENT_INTERFACE,
@@ -83,20 +84,17 @@ int transfer_out(const struct Configuration *config,
                                    bootio_transfer_timeout);
 }
 
-int transfer_status(const struct Configuration *config, uint8_t *buffer) {
+int transfer_status(const struct Configuration *config, const uint8_t *buffer) {
     assert_config(config);
-    uint8_t *temp_buffer = realloc(buffer, 6 * sizeof(uint8_t));
-    if (temp_buffer == wor_bootio_nullptr__) {
-        free(buffer);
+    if (buffer == wor_bootio_nullptr__) {
         return BootIoError_Other;
     }
-    buffer = temp_buffer;
     const int ec = libusb_control_transfer(config->device_handle,
                                            LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE,
                                            DfuCommand_GetStatus,
                                            0,
                                            config->interface_number,
-                                           buffer,
+                                           (uint8_t *)buffer,
                                            6,
                                            bootio_transfer_timeout);
     return ec;

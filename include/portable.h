@@ -19,14 +19,13 @@
 #ifdef _MSC_VER
 #include <Windows.h>
 #include <stdint.h>
-#elifdef __clang__
+#elif defined(__clang__)
 #include <time.h>
 #include <unistd.h>
 #endif
 
 #ifdef __cplusplus
 extern "C" {
-
 #endif
 
 /**

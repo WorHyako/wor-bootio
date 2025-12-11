@@ -121,7 +121,7 @@ out:
 }
 
 int download_dfuse(struct Configuration *config,
-                   struct DfuFile *file,
+                   const struct DfuFile *file,
                    const size_t start_address,
                    uint16_t chunk_size) {
     if (config == wor_bootio_nullptr__ || file == wor_bootio_nullptr__ || file->data == wor_bootio_nullptr__) {
