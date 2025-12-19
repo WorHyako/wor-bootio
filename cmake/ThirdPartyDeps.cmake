@@ -1,3 +1,6 @@
+# Copyright (c) 2025 WorHyako
+# Licensed under the MIT License
+
 include(FetchContent)
 
 # --------- #

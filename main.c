@@ -80,6 +80,7 @@ static int dfu_file_write(struct DfuFile *file) {
         }
     }
     ec = (int)fwrite(file->data, sizeof(*file->data), file->size.total, out);
+    fclose(out);
     return ec;
 }
 
@@ -152,7 +153,11 @@ int main() {
         ec = bytes_count;
         return -1;
     }
-    struct DfuFile file;
+    struct DfuFile file = {
+        .data = wor_bootio_nullptr__,
+        .path = wor_bootio_nullptr__,
+        .size = 0
+    };
 
     dfu_file_set_path(&file, "test.bin");
     ec = load_file(&file, buf, bytes_count);

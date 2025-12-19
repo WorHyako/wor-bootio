@@ -1,8 +1,13 @@
+# Copyright (c) 2025 WorHyako
+# Licensed under the MIT License
+
 cmake_minimum_required(VERSION 3.23)
+
+option(WOR_BOOTIO_ENABLE_TESTS "Enable tests for Wor-BootIo" OFF)
 
 project(wor-bootio
         LANGUAGES C
-        VERSION 0.0.0)
+        VERSION 0.1.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -96,5 +101,7 @@ target_link_libraries(wor_bootio-example
         PRIVATE
         Wor::BootIo)
 
-enable_testing()
-add_subdirectory(tests)
+if (WOR_BOOTIO_ENABLE_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif ()

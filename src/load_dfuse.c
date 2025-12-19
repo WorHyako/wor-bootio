@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 WorHyako
+
 #include "bootio_error.h"
 #include "load.h"
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 WorHyako
+
 #pragma once
 
 #if __STDC_VERSION__ < 202311L
@@ -37,7 +40,7 @@ extern "C" {
  *
  * \param milliseconds The number of milliseconds to sleep.
  */
-inline void wor_bootio_sleep_ms(const uint32_t milliseconds) {
+static inline void wor_bootio_sleep_ms(const uint32_t milliseconds) {
 #ifdef WIN32
     Sleep(milliseconds);
 #else

@@ -1,3 +1,6 @@
+# Copyright (c) 2025 WorHyako
+# Licensed under the MIT License
+
 option(WorBootio_Enable_ClangTidy "Enable clang-tidy analyze" OFF)
 option(WorBootio_Enable_AddressSanitizer "Enable AddressSanitizer" OFF)
 

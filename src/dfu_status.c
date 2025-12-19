@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 WorHyako
+
 #include "dfu_status.h"
 
 #include "bootio_error.h"
