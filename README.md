@@ -1,4 +1,4 @@
-# Wor::BootIo
+# Wor::Bootio
 
 ## Description
 
@@ -39,3 +39,10 @@ cmake ..
 cmake --build .
 ```
 
+---
+
+Ref docs:
+
+- [DFU protocol 1.1, Aug 5, 2004](https://libusb.info/)
+- [AN3156 (STM32 USB DFU Boot Protocol)](https://embedded.fel.cvut.cz/sites/default/files/procesory/STM32/Nastroje/en.CD00264379____AN3156__STM32__USB_DFU_Boot_Protocol.pdf)
+- [Open source DfuSe Demo repo](https://github.com/lingex/ST-DFUSe/tree/dev)
